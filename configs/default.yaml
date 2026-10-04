@@ -1,0 +1,46 @@
+# Shared settings for every model. A model's own file in configs/models/
+# can override any of these values.
+
+seed: 0          # random seed, so runs can be repeated with the same result
+device: cuda     # where to run: "cuda" = NVIDIA GPU, "cpu" = processor only
+
+data:
+  mayo_root: data/mayo   # folder holding the Mayo low-dose CT dataset
+
+  # Patients used to train the models.
+  # RULE: L506 is the locked test patient and must NEVER be listed here.
+  train_patients: [L067, L096, L109, L143, L192, L286, L291, L310, L333]
+
+  # Patients used for validation (only to watch the loss during training).
+  # RULE: must NEVER contain L506.
+  val_patients: [L333]
+  val_every_kth_slice: 20   # use only every 20th slice so validation is quick
+
+  # Held-out data used only for final testing, never for training.
+  test_sets:
+    mayo_L506:              # the locked Mayo test patient
+      root: data/mayo
+      patients: [L506]
+    lits:                   # LiTS liver CT dataset, to test on unseen data
+      root: data/lits
+      patients: all         # use every patient in the folder
+
+train:
+  epochs: 250               # number of full passes over the training data
+  batch_size: 8             # images processed together in one step
+  patch: 64                 # size (pixels) of the square crops cut from each image
+  patch_n: 4                # number of crops cut from each image
+  lr: 1.0e-3                # starting learning rate (how big each update step is)
+  lr_min: 1.0e-6            # smallest learning rate the schedule decays to
+  weight_decay: 0.02        # small penalty on large weights, to reduce overfitting
+  betas: [0.9, 0.999]       # AdamW optimizer momentum settings
+  workers: 4                # background processes that load data
+  val_every: 5              # run validation every 5 epochs
+  max_steps_per_epoch: null # cap on steps per epoch (null = no cap; handy for quick tests)
+
+infer:
+  patch: null               # crop size at test time (null = process the whole image at once)
+  stride: 32                # step between crops when patch is set (smaller = more overlap)
+  batch: 64                 # crops processed together at test time
+
+output_dir: runs            # where checkpoints, logs and results are saved

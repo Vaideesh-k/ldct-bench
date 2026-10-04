@@ -1,0 +1,13 @@
+# CT data and model outputs: too big and private to commit
+data/
+runs/
+third_party/
+*.pth
+*.npy
+
+# Python
+__pycache__/
+.venv/
+
+# macOS
+.DS_Store
