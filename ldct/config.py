@@ -27,26 +27,31 @@ def _read_yaml(path):
         return yaml.safe_load(f) or {}
 
 
-def load_config(model_name):
+def load_config(model_name, extra=None):
     """Load configs/default.yaml, then apply configs/models/<model_name>.yaml
-    on top if it exists."""
+    on top if it exists, then the optional `extra` yaml file (used by tests to
+    point everything at temporary folders)."""
     cfg = _read_yaml(ROOT / "configs" / "default.yaml")
 
     model_file = ROOT / "configs" / "models" / f"{model_name}.yaml"
     if model_file.exists():
         cfg = _deep_merge(cfg, _read_yaml(model_file))
+    if extra:
+        cfg = _deep_merge(cfg, _read_yaml(extra))
 
     cfg["model_name"] = model_name
+    check_locked_patient(cfg)
+    return cfg
 
-    # Guard the locked test patient, even if a model file overrides the splits.
+
+def check_locked_patient(cfg):
+    """Guard the locked test patient, even if a model file overrides the splits."""
     for split in ("train_patients", "val_patients"):
         if LOCKED_TEST_PATIENT in cfg["data"].get(split, []):
             raise ValueError(
                 f"{LOCKED_TEST_PATIENT} is the locked test patient and must not "
                 f"appear in data.{split}"
             )
-
-    return cfg
 
 
 def resolve(path):
