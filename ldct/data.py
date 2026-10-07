@@ -1,6 +1,6 @@
 """Data loading: reads CT slices from disk and prepares them for the model.
 
-Every slice is saved as a float32 .npy file in Hounsfield units (HU):
+Every slice is saved as an .npy file in Hounsfield units (HU), int16 or float32:
     <root>/<patient>/quarter/<name>.npy   low-dose (noisy) slice
     <root>/<patient>/full/<name>.npy      normal-dose (clean) slice, same file name
 """
@@ -45,6 +45,46 @@ def list_pairs(root, patients, low="quarter", high="full", every=1):
             name = os.path.splitext(os.path.basename(f))[0]   # "L067_0000.npy" -> "L067_0000"
             pairs.append((f, g, p, name))
     return pairs
+
+
+def choose_test_sets(cfg, names=None):
+    """Which test sets to run. Named sets must exist in the config. With no
+    names, every set whose folder exists is used; missing ones are skipped
+    with a warning (e.g. LiTS before it has been prepared)."""
+    from ldct.config import resolve
+    all_sets = cfg["data"]["test_sets"]
+    if names:
+        unknown = [n for n in names if n not in all_sets]
+        if unknown:
+            raise SystemExit(f"Unknown test set(s) {unknown}. Known: {list(all_sets)}")
+        return list(names)
+    chosen = []
+    for name, spec in all_sets.items():
+        if os.path.isdir(resolve(spec["root"])):
+            chosen.append(name)
+        else:
+            print(f"WARNING: skipping test set {name}: {spec['root']} does not exist yet")
+    if not chosen:
+        raise SystemExit("None of the test set folders exist. Prepare the data first.")
+    return chosen
+
+
+def test_set_pairs(test_set):
+    """All slice pairs of one test set from the config, e.g.
+    {root: data/mayo, patients: [L506]} or {root: data/lits, patients: all}.
+    patients: all = every patient folder found under root."""
+    from ldct.config import resolve   # imported here to keep data.py usable on its own
+    root = str(resolve(test_set["root"]))
+    patients = test_set["patients"]
+    if patients == "all":
+        if not os.path.isdir(root):
+            raise FileNotFoundError(f"Test set folder {root} does not exist")
+        patients = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
+        if not patients:
+            raise FileNotFoundError(f"No patient folders in {root}")
+    return list_pairs(root, patients)
+
+
 class PatchPairs(Dataset):
     """Training data: random matching patches from noisy/clean slice pairs."""
 
