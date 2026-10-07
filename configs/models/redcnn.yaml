@@ -1,0 +1,9 @@
+# RED-CNN (Chen et al. 2017): small reference model for testing the pipeline.
+# Only the settings that differ from configs/default.yaml.
+
+model_args:
+  channels: 96     # feature maps per layer (96 in the paper -> 1.85 M parameters)
+
+train:
+  lr: 1.0e-4       # starting learning rate (as in the RED-CNN paper)
+  lr_min: 1.0e-5   # learning rate at the end of the cosine schedule

@@ -2,7 +2,8 @@
 # can override any of these values.
 
 seed: 0          # random seed, so runs can be repeated with the same result
-device: cuda     # where to run: "cuda" = NVIDIA GPU, "cpu" = processor only
+model_args: {}   # settings passed to the model's build(); each model's yaml fills this in
+device: cuda     # preferred device: "cuda" = NVIDIA GPU; falls back to "mps" (Mac GPU), then "cpu"
 
 data:
   mayo_root: data/mayo   # folder holding the Mayo low-dose CT dataset
@@ -43,4 +44,8 @@ infer:
   stride: 32                # step between crops when patch is set (smaller = more overlap)
   batch: 64                 # crops processed together at test time
 
-output_dir: runs            # where checkpoints, logs and results are saved
+eval:
+  window: [-160, 240]       # HU range used for PSNR/SSIM/RMSE (soft tissue), as in CT-Mamba
+
+output_dir: runs            # where checkpoints, logs and predictions are saved (not in git)
+results_dir: results        # where summary.csv is written (committed to git)
