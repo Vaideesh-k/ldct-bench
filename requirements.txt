@@ -1,4 +1,12 @@
-pyyaml==6.0.3
-numpy==2.5.3
-torch==2.14.1
-pydicom==3.0.2
+# PyTorch is NOT listed here: install it separately, matching your machine.
+#   NVIDIA laptop: use the ctmamba conda environment (it already has PyTorch + CUDA)
+#   Mac:           pip install torch
+# Versions are not pinned so the same file works with Python 3.8 (CT-Mamba env) and newer.
+numpy
+scipy
+scikit-image
+pydicom
+nibabel
+pyyaml
+tqdm
+matplotlib
