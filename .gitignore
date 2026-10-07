@@ -5,6 +5,11 @@ third_party/
 *.pth
 *.npy
 
+# results/: only the summary table and copied training logs are committed
+results/*
+!results/summary.csv
+!results/*_train_log.csv
+
 # Python
 __pycache__/
 .venv/
