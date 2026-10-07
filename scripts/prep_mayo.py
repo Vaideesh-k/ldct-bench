@@ -43,7 +43,10 @@ def load_hu(files):
 
     # 4. read the slice thickness, so we can check it really is 1 mm
     thickness = float(getattr(slices[0], "SliceThickness", 0))
-    return images, thickness
+
+    # 5. keep each slice's body position, so noisy and clean can be checked against each other
+    z = [float(s.ImagePositionPatient[2]) for s in slices]
+    return images, thickness, z
 def main():
     # read the options typed on the command line
     ap = argparse.ArgumentParser()
@@ -60,12 +63,18 @@ def main():
 
     for p in patients:
         pdir = os.path.join(args.src, p)
-        low, t_low = load_hu(find_series(pdir, args.low_pattern))      # noisy
-        high, t_high = load_hu(find_series(pdir, args.high_pattern))   # clean
+        low, t_low, z_low = load_hu(find_series(pdir, args.low_pattern))      # noisy
+        high, t_high, z_high = load_hu(find_series(pdir, args.high_pattern))  # clean
 
         # every noisy slice must have a clean partner
         if len(low) != len(high):
             raise RuntimeError(f"{p}: {len(low)} quarter-dose vs {len(high)} full-dose slices")
+
+        # ...at the same place in the body, otherwise the pairs show different anatomy
+        if not np.allclose(z_low, z_high, atol=0.01):
+            bad = next(i for i, (a, b) in enumerate(zip(z_low, z_high)) if abs(a - b) > 0.01)
+            raise RuntimeError(f"{p}: slice {bad} is at z={z_low[bad]} (quarter) "
+                               f"but z={z_high[bad]} (full); noisy and clean do not line up")
 
         # save as data/mayo/<patient>/quarter/<patient>_0000.npy, and the same in full/
         for kind, images in (("quarter", low), ("full", high)):
