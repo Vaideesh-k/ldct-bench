@@ -1,0 +1,19 @@
+# CT-Mamba (Li et al. 2025), official code wrapped in ldct/models/ct_mamba.py.
+# Needs: bash scripts/get_ct_mamba.sh, an NVIDIA GPU and mamba-ssm.
+# Values follow the official optionsmamba.py and the CT-Mamba paper.
+
+model_args: {}            # the official CT_Mamba() takes no settings
+
+train:
+  epochs: 250             # optionsmamba.py --nepoch 250
+  batch_size: 8           # slices per step (x patch_n patches = 32 patches)
+  patch: 64               # the model only accepts 64x64 inputs
+  patch_n: 4              # patches cut from each slice
+  lr: 1.0e-3              # optionsmamba.py --lr_initial 0.001
+  lr_min: 1.0e-6          # eta_min of the official cosine schedule
+  weight_decay: 0.02      # optionsmamba.py --weight_decay 0.02
+
+infer:
+  patch: 64               # denoise whole slices as 64x64 tiles...
+  stride: 32              # ...that overlap by half (overlaps are averaged)
+  batch: 64               # tiles per forward pass
