@@ -28,6 +28,8 @@ The noise feature nets (unet_feature, unet_feature1, ss2d, ss2d1) are trained
 together with the model (train_denoise.py lines 77-86); here they live inside
 this module, so our optimizer trains them too and they are saved in checkpoints.
 pixelSpacing is 1.0 (train_denoise.py line 205).
+Because the loss gains terms at epoch 11, configs/models/ct_mamba.yaml sets
+train.best_from_epoch: 11 (best.pth is chosen only among epochs 11+).
 
 NEEDS PRETRAINED WEIGHTS: loss4 uses torchvision's ImageNet ResNet-50
 (NPSloss.py line 252, pretrained=True). torchvision downloads it (~100 MB)

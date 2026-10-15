@@ -37,6 +37,8 @@ train:
   betas: [0.9, 0.999]       # AdamW optimizer momentum settings
   workers: 4                # background processes that load data
   val_every: 5              # run validation every 5 epochs
+  best_from_epoch: 1        # best.pth = lowest training loss among epochs >= this
+                            # (raise it if the model's loss formula changes mid-training)
   max_steps_per_epoch: null # cap on steps per epoch (null = no cap; handy for quick tests)
 
 infer:

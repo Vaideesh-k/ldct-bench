@@ -100,6 +100,20 @@ def count_params(model):
     return net, sum(p.numel() for m in loss_parts for p in m.parameters())
 
 
+def choose_best(epoch, train_loss, best_loss, best_epoch, best_from=1):
+    """The final model is the epoch with the lowest training loss, counting only
+    epochs >= best_from. A model whose loss formula changes during training
+    (CT-Mamba adds terms at epoch 11) sets best_from there, so best.pth is never
+    stuck at an early epoch whose loss used a smaller formula. Earlier epochs still
+    update best.pth until then (so a short or smoke run always has one).
+    Returns (best_loss, best_epoch, this_epoch_is_new_best)."""
+    if best_epoch < best_from <= epoch:
+        best_loss = math.inf   # forget bests from before the switch
+    if train_loss < best_loss:
+        return train_loss, epoch, True
+    return best_loss, best_epoch, False
+
+
 def save(state, path):
     """Write to a temporary file first, so a crash mid-save never corrupts the checkpoint."""
     torch.save(state, path + ".tmp")
@@ -195,9 +209,13 @@ def main():
         if epoch % t["val_every"] == 0 or epoch == t["epochs"]:
             val_l1 = round(validate(model, val_loader, cfg, device), 4)
 
-        # the final model is the epoch with the LOWEST TRAINING LOSS (as in CT-Mamba)
-        if train_loss < best_loss:
-            best_loss, best_epoch = train_loss, epoch
+        # the final model is the epoch with the LOWEST TRAINING LOSS (as in CT-Mamba),
+        # among epochs >= train.best_from_epoch
+        if epoch == t["best_from_epoch"] > 1:
+            print(f"From epoch {epoch} on, best.pth is chosen only among epochs >= {epoch}.")
+        best_loss, best_epoch, improved = choose_best(epoch, train_loss, best_loss, best_epoch,
+                                                      t["best_from_epoch"])
+        if improved:
             save({"model": model.state_dict(), "epoch": epoch, "train_loss": train_loss,
                   "model_args": cfg["model_args"]}, best)
         save({"model": model.state_dict(), "optimizer": optimizer.state_dict(),

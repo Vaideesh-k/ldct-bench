@@ -12,6 +12,8 @@ train:
   lr: 1.0e-3              # optionsmamba.py --lr_initial 0.001
   lr_min: 1.0e-6          # eta_min of the official cosine schedule
   weight_decay: 0.02      # optionsmamba.py --weight_decay 0.02
+  best_from_epoch: 11     # the loss gains 2 noise terms at epoch 11 (WARMUP_EPOCHS in
+                          # ldct/models/ct_mamba.py), so earlier losses are not comparable
 
 infer:
   patch: 64               # denoise whole slices as 64x64 tiles...

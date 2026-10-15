@@ -183,6 +183,21 @@ try:
     code, out = script("predict.py", "--model", "redcnn", "--config", no_lits_path)
     check("missing LiTS folder -> skipped with a warning", code == 0 and "skipping test set lits" in out)
 
+    # ---- best_from_epoch: resume an old run (best at epoch <= 2) with best_from_epoch 3 ----
+    bf_dir = os.path.join(tmp, "runs_best_from")
+    bf_path = os.path.join(tmp, "best_from.yaml")
+    for best_from, epochs, extra in ((1, "2", []), (3, "4", ["--resume"])):
+        with open(bf_path, "w") as f:
+            yaml.safe_dump(dict(cfg, output_dir=bf_dir,
+                                train=dict(cfg["train"], best_from_epoch=best_from)), f)
+        code, out = script("train.py", "--model", "redcnn", "--epochs", epochs, *extra, "--config", bf_path)
+    bf_run = os.path.join(bf_dir, "redcnn")
+    bf_losses = {int(r["epoch"]): float(r["train_loss"]) for r in read_csv(os.path.join(bf_run, "train_log.csv"))}
+    bf_best = torch.load(os.path.join(bf_run, "best.pth"), map_location="cpu")["epoch"]
+    check("best_from_epoch 3: best.pth = lowest loss among epochs 3-4 only",
+          code == 0 and sorted(bf_losses) == [1, 2, 3, 4]
+          and bf_best == min((3, 4), key=bf_losses.get) and "chosen only among epochs >= 3" in out)
+
     # ---- safety checks ----
     for split in ("train_patients", "val_patients"):
         bad = dict(cfg, data=dict(cfg["data"], **{split: ["L333", "L506"]}))

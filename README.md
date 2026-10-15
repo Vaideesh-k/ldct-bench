@@ -11,7 +11,7 @@ numbers in `results/summary.csv` can be compared fairly.
 |---|---|
 | Train on Mayo 2016, 1 mm: L067 L096 L109 L143 L192 L286 L291 L310 L333 | `configs/default.yaml` |
 | **L506 is the locked test patient**: never in training or validation | `ldct/config.py` refuses to load such a config; `train.py` refuses to run |
-| Final model = epoch with the **lowest training loss** (`best.pth`), as in CT-Mamba | `scripts/train.py` |
+| Final model = epoch with the **lowest training loss** (`best.pth`), as in CT-Mamba; only epochs >= `train.best_from_epoch` count (11 for CT-Mamba, whose loss changes there) | `scripts/train.py` |
 | Validation (every 20th slice of L333) only logs a loss; it never picks the model | `scripts/train.py` |
 | Slices on disk: `.npy` in HU (int16 or float32). Models see [0, 1] via `hu_to_unit` | `ldct/data.py` |
 | Metrics in the soft-tissue window -160..240 HU | `ldct/metrics.py`, `eval.window` |
@@ -66,6 +66,7 @@ python tests/check_prep.py
 python tests/check_metrics.py
 python tests/check_infer.py
 python tests/check_models.py
+python tests/check_train.py       # how best.pth is chosen
 python tests/check_pipeline.py     # the whole pipeline end to end with RED-CNN
 ```
 
@@ -97,7 +98,7 @@ Outputs:
 | File | What |
 |---|---|
 | `runs/<model>/latest.pth` | saved every epoch, used by `--resume` |
-| `runs/<model>/best.pth` | the final model (lowest training loss) |
+| `runs/<model>/best.pth` | the final model (lowest training loss, from epoch `best_from_epoch` on) |
 | `runs/<model>/train_log.csv` | epoch, train_loss, val_l1 (HU), lr, seconds |
 | `runs/<model>/predictions/<set>/...` | denoised slices (float32 HU) + `timing.json` |
 | `runs/<model>/results_<set>.json` | mean and std of every metric |
