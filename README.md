@@ -15,6 +15,8 @@ numbers in `results/summary.csv` can be compared fairly.
 | Validation (every 20th slice of L333) only logs a loss; it never picks the model | `scripts/train.py` |
 | Slices on disk: `.npy` in HU (int16 or float32). Models see [0, 1] via `hu_to_unit` | `ldct/data.py` |
 | Metrics in the soft-tissue window -160..240 HU | `ldct/metrics.py`, `eval.window` |
+| **LiTS test patients are locked** (`configs/lits_split.json`, seed 0): never trained on, never used for tuning or checkpoint choice | `data.test_sets.lits` reads the split; `train.extra_train_sets` refuses the test part |
+| Baselines use each paper's own settings; where they conflict with the rules above, the rules win and the difference is written in the wrapper's docstring | `ldct/models/ctformer.py`, `ldct/models/corediff.py` |
 
 ## Folder map
 
@@ -32,14 +34,28 @@ ldct-bench/
     models/template.py        copy this to add a model (documents the contract)
     models/redcnn.py          RED-CNN, small reference model for testing
     models/ct_mamba.py        CT-Mamba, wraps the official code in third_party/
+    models/ctformer.py        CTformer (official code, official settings)
+    models/corediff.py        CoreDiff (official code; whole slices, 3-slice context, EMA)
+    models/ct_mamba_hybrid.py Idea 2: CT-Mamba with CTformer attention (3 variants)
+    lesion.py                 Idea 1: lesion-weighted L1 + tumour-aware patch sampling
   scripts/
     prep_mayo.py              Mayo DICOM -> data/mayo/<patient>/{quarter,full}/*.npy
     rearrange_mayo.sh         fix the folder layout of the unzipped Mayo files
-    get_ct_mamba.sh           download the official CT-Mamba code (pinned commit)
-    train.py                  train one model -> runs/<model>/best.pth
+    get_ct_mamba.sh, get_ctformer.sh, get_corediff.sh   official code (pinned commits)
+    train.py                  train one model -> runs/<run>/best.pth (--run, --config, --init)
     predict.py                denoise all test slices + timing
-    evaluate.py               score them -> results/summary.csv
+    evaluate.py               score them -> results/summary.csv + per-slice scores_<set>.csv
     run_all.sh                train (resumable) + predict + evaluate in one go
+    make_lits_split.py        the LOCKED LiTS patient split -> configs/lits_split.json
+    make_lits_lowdose.py      LiTS NIfTI -> .npy + simulated quarter dose + masks
+    calibrate_lits_noise.py   Mayo quarter-minus-full noise (the simulation's target)
+    prep_lits.py              Kaggle part 1 -> data/lits, one patient at a time
+    prep_nnunet.py            data/lits train patients -> nnU-Net v2 raw dataset
+    detect_eval.py            lesion-wise detection metrics (3D components, < 10 mm, FP, Dice)
+  slurm/                      DGX job scripts (see slurm/README.md)
+  configs/lits_split.json     the locked LiTS split (never change it)
+  configs/short50.yaml, configs/variants/, configs/finetune_*.yaml   Idea 2 / Idea 1 runs
+  docs/                       PROGRESS.md (log), hybrid_design.md (Idea 2), MORNING_REPORT.md
   tests/                      quick checks on small fake data (no real CT needed)
   results/summary.csv         the comparison table (committed)
   LAPTOP_RUN.md               step-by-step guide for the GPU laptop
@@ -68,6 +84,11 @@ python tests/check_infer.py
 python tests/check_models.py
 python tests/check_train.py       # how best.pth is chosen
 python tests/check_pipeline.py     # the whole pipeline end to end with RED-CNN
+python tests/check_baselines.py    # CTformer / CoreDiff wrappers, slice context, augmentation
+python tests/check_lits.py         # LiTS conversion + low-dose simulation
+python tests/check_detect.py       # detection metrics
+python tests/check_hybrid.py       # Idea 2 (GPU part needs the DGX: slurm/hybrid_test.sbatch)
+python tests/check_lesion.py       # Idea 1
 ```
 
 ## How to run
