@@ -62,11 +62,12 @@ def make_loaders(cfg, device):
         raise SystemExit(f"{e}\nPrepare the data first: python scripts/prep_mayo.py --src <mayo_raw> --dst {d['mayo_root']}")
 
     train_loader = DataLoader(
-        PatchPairs(train_pairs, patch=t["patch"], patch_n=t["patch_n"]),
+        PatchPairs(train_pairs, patch=t["patch"], patch_n=t["patch_n"],
+                   context=d.get("context", 0), augment=d.get("augment", False)),
         batch_size=t["batch_size"], shuffle=True, num_workers=t["workers"],
         collate_fn=collate_patches, worker_init_fn=seed_worker,
         pin_memory=device.type == "cuda")
-    val_loader = DataLoader(SlicePairs(val_pairs), batch_size=1, num_workers=t["workers"])
+    val_loader = DataLoader(SlicePairs(val_pairs, context=d.get("context", 0)), batch_size=1, num_workers=t["workers"])
     print(f"Training: {len(train_pairs)} slices from {len(d['train_patients'])} patients | "
           f"validation: {len(val_pairs)} slices of {', '.join(d['val_patients'])}")
     return train_loader, val_loader
@@ -92,8 +93,8 @@ def validate(model, loader, cfg, device):
 
 
 def count_params(model):
-    """Parameters of the denoiser itself; a loss network (if the model lists it
-    in `loss_modules`) is counted separately because it is not used at test time."""
+    """Parameters of the denoiser itself; modules the model lists in `loss_modules`
+    (a loss network, an EMA copy) are counted separately: not trained as the denoiser."""
     loss_parts = [getattr(model, name) for name in getattr(model, "loss_modules", ())]
     loss_ids = {id(p) for m in loss_parts for p in m.parameters()}
     net = sum(p.numel() for p in model.parameters() if id(p) not in loss_ids)
@@ -159,7 +160,7 @@ def main():
     model = build_model(args.model, **cfg["model_args"]).to(device)
     net, loss_net = count_params(model)
     print(f"Model {args.model}: {net:,} parameters ({net / 1e6:.2f} M)"
-          + (f", plus {loss_net:,} in its loss network" if loss_net else "") + f" | device: {device}")
+          + (f", plus {loss_net:,} in {'/'.join(getattr(model, 'loss_modules', ()))} (not counted)" if loss_net else "") + f" | device: {device}")
 
     # only parameters that are meant to learn (a frozen pretrained loss network is skipped)
     trainable = [p for p in model.parameters() if p.requires_grad]

@@ -20,7 +20,7 @@ from tqdm import tqdm
 # let this script import from the ldct package (it lives one folder up)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ldct.config import load_config, resolve
-from ldct.data import choose_test_sets, hu_to_unit, test_set_pairs, unit_to_hu
+from ldct.data import choose_test_sets, load_input, neighbours, test_set_pairs, unit_to_hu
 from ldct.infer import denoise_slice
 from ldct.models import build_model
 from ldct.runtime import device_name, pick_device, synchronize
@@ -52,9 +52,10 @@ def predict_set(model, cfg, set_name, out_dir, device):
     except FileNotFoundError as e:
         raise SystemExit(f"Test set {set_name}: {e}")
 
+    inputs = neighbours(pairs, cfg["data"].get("context", 0))   # [[low_path]] unless the model wants neighbours
     seconds = []
-    for lo_path, _, patient, name in tqdm(pairs, desc=set_name):
-        x = torch.from_numpy(hu_to_unit(np.load(lo_path).astype(np.float32)))[None, None].to(device)
+    for (_, _, patient, name), low_paths in zip(tqdm(pairs, desc=set_name), inputs):
+        x = torch.from_numpy(load_input(low_paths))[None].to(device)   # (1, channels, H, W)
 
         synchronize(device)               # make sure nothing else is still running
         start = time.perf_counter()

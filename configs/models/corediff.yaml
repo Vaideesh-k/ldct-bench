@@ -1,0 +1,24 @@
+# CoreDiff (Gao et al. 2024), official code wrapped in ldct/models/corediff.py.
+# Needs: bash scripts/get_corediff.sh, einops.
+# Values follow the official train_mayo2016.sh and defaults (see the wrapper's docstring).
+
+model_args:
+  image_size: 512         # whole slices (Diffusion asserts the training size)
+  T: 10                   # diffusion steps (--T 10)
+  context: true           # slices above and below as extra input channels (--context)
+
+data:
+  context: 1              # give the model the slice above and below (3 input channels)
+
+train:
+  epochs: 222             # x 677 steps/epoch (5,410 slices / 8) = 150,294 updates (~ --max_iter 150000)
+  batch_size: 8           # train_mayo2016.sh --batch_size 8 whole slices per step
+  patch: 512              # whole 512x512 slices, no cropping
+  patch_n: 1              # one "patch" (the slice) per slice
+  lr: 2.0e-4              # --init_lr 2e-4 (Adam)
+  lr_min: 2.0e-4          # the official lr is constant: cosine from lr to lr = constant
+  weight_decay: 0.0       # Adam, no weight decay
+  best_from_epoch: 1      # the loss never changes form
+
+infer:
+  patch: null             # whole slices through the 10-step sampler (model.denoise)

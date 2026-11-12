@@ -4,8 +4,10 @@
     python scripts/evaluate.py --baseline              score the raw quarter-dose input
     python scripts/evaluate.py --model redcnn --sets mayo_L506
 
-Writes runs/<model or quarter_dose>/results_<set>.json (means, stds, ...)
-and updates results/summary.csv (one row per model and test set; committed to git).
+Writes runs/<model or quarter_dose>/results_<set>.json (means, stds, ...),
+runs/<model or quarter_dose>/scores_<set>.csv (one row per slice: patient, name,
+psnr, ssim, rmse) and updates results/summary.csv (one row per model and test set;
+committed to git).
 """
 import argparse
 import csv
@@ -44,7 +46,7 @@ def score_set(cfg, set_name, pred_dir):
     except FileNotFoundError as e:
         raise SystemExit(f"Test set {set_name}: {e}")
 
-    scores = []
+    scores = []   # one dict per slice, with patient and name so they can be saved
     for lo_path, hi_path, patient, name in tqdm(pairs, desc=set_name):
         if pred_dir is None:
             pred = np.load(lo_path)
@@ -53,8 +55,16 @@ def score_set(cfg, set_name, pred_dir):
             if not os.path.exists(path):
                 raise SystemExit(f"Missing prediction {path}. Run scripts/predict.py first.")
             pred = np.load(path)
-        scores.append(score(pred, np.load(hi_path), lo, hi))
+        scores.append(dict(patient=patient, name=name, **score(pred, np.load(hi_path), lo, hi)))
     return scores
+
+
+def save_scores(path, scores):
+    """Per-slice scores as CSV, so later analyses (per-patient, per-region) need no re-run."""
+    with open(path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["patient", "name", "psnr", "ssim", "rmse"])
+        writer.writeheader()
+        writer.writerows(scores)
 
 
 def update_summary(path, new_row):
@@ -98,6 +108,7 @@ def main():
                   "window_hu": cfg["eval"]["window"], "mean": means, "std": stds, "timing": timing}
         with open(os.path.join(run_dir, f"results_{set_name}.json"), "w") as f:
             json.dump(result, f, indent=2)
+        save_scores(os.path.join(run_dir, f"scores_{set_name}.csv"), scores)
 
         update_summary(summary_path, {
             "model": tag, "test_set": set_name,

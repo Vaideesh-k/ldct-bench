@@ -16,6 +16,9 @@ data:
   # RULE: must NEVER contain L506.
   val_patients: [L333]
   val_every_kth_slice: 20   # use only every 20th slice so validation is quick
+  context: 0                # k = also feed the k slices above and below as extra input
+                            # channels (CoreDiff uses 1); the target is always the centre slice
+  augment: false            # flip/rotate half of the training patches at random (CTformer does)
 
   # Held-out data used only for final testing, never for training.
   test_sets:

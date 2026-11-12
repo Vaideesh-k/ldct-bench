@@ -1,0 +1,24 @@
+# CTformer (Wang et al. 2023), official code wrapped in ldct/models/ctformer.py.
+# Needs: bash scripts/get_ctformer.sh, timm, einops.
+# Values follow the official main.py / solver.py / loader.py (see the wrapper's docstring).
+
+model_args: {}            # the official network configuration is fixed in the wrapper
+
+data:
+  augment: true           # loader.py: half the patches flipped/rotated at random
+
+train:
+  epochs: 1565            # x 339 steps/epoch (5,410 slices / 16) = 530,000 updates, the
+                          # iteration count of the released official checkpoint
+  batch_size: 16          # main.py --batch_size 16 slices per step...
+  patch: 64               # main.py --patch_size 64
+  patch_n: 4              # main.py --patch_n 4  (16 x 4 = 64 patches per step)
+  lr: 1.0e-5              # main.py --lr 1e-5 (Adam)
+  lr_min: 1.0e-7          # end of our shared cosine schedule (official: step decay, see wrapper)
+  weight_decay: 0.0       # Adam, no weight decay
+  best_from_epoch: 1      # the loss never changes form
+
+infer:
+  patch: 64               # the network only takes 64x64 inputs: tile whole slices...
+  stride: 32              # ...with half overlap (official test also uses stride 32)
+  batch: 64
