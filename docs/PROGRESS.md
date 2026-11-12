@@ -95,8 +95,13 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
 ## Step 5: tumour finder (in progress)
 
 - Decision (Q6 default): "nnunet" is a venv on the ctmamba Python with system site
-  packages (~/venvs/nnunet; reuses torch, ~0.3 GB instead of ~6 GB). Install job 35426
-  running on cpu_student. Trainer default nnUNetTrainer_250epochs, 3d_fullres, fold 0.
+  packages (~/venvs/nnunet; reuses torch). Installed by job 35426 on cpu_student after
+  ~20 min of PyPI retries: nnunetv2 2.8.1, 608 MB, imports and CLI verified.
+  Trainer nnUNetTrainer_250epochs, 3d_fullres, fold 0 (default 1000 epochs would be ~3-4 days).
+- **SUBMITTED: nnunet = job 35434**, `--dependency=afterok:35431,afterany:35391` (after the
+  LiTS build and after the CoreDiff job, so it never runs next to another full-A100 job of
+  ours). It writes the raw dataset (train patients only), preprocesses, trains fold 0,
+  predicts the locked test patients at normal dose and runs detect_eval.py on them.
 - Written: `scripts/prep_nnunet.py` (train patients only -> Dataset501_LiTSLiver; test
   patients images-only for inference, optionally from a model's predictions) and
   `slurm/nnunet_train.sbatch` (raw -> preprocess -> train -> predict normal-dose test
@@ -141,3 +146,9 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
   from the split file (never "all").
 - `configs/finetune_control.yaml` / `finetune_lesion.yaml` + `slurm/finetune.sbatch`:
   WRITTEN, NOT SUBMITTED (also need data/lits first). 24 checks in tests/check_lesion.py pass.
+
+## Checks
+
+- The complete test suite (10 files) passes on the Mac (CPU) and on a DGX compute node
+  (job 35433). CT-Mamba per-slice L506 scores regenerated from the existing predictions
+  (runs/ct_mamba/scores_mayo_L506.csv, copy in dgx_results/; mean 29.419 dB matches).
