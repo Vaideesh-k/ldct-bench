@@ -87,5 +87,13 @@ try:
 except ImportError:
     print("nibabel missing: skipped the NIfTI conversion checks")
 
+# ---- prep_lits cleanup never touches the archive ----
+from prep_lits import clean_raw
+d = tempfile.mkdtemp()
+for name in ("volume-3.nii", "segmentation-3.nii", "liver-tumor-segmentation.zip", "notes.txt"):
+    open(os.path.join(d, name), "w").close()
+clean_raw(d)
+check("clean_raw removes only .nii files (the archive survives)", sorted(os.listdir(d)) == ["liver-tumor-segmentation.zip", "notes.txt"])
+
 print("\nFAILED:" if failed else "\nAll LiTS checks passed.", failed or "")
 sys.exit(1 if failed else 0)

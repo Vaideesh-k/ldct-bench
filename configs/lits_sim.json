@@ -1,9 +1,0 @@
-{
- "I0": 1414200.0,
- "dose": 0.25,
- "target_added_noise_std_hu": 48.226206727889014,
- "trial_I0": 200000.0,
- "trial_added_noise_std_hu": 128.23969856603279,
- "calibration_patient": "lits_000 (train patient)",
- "rule": "I0 = trial_I0 * (trial_std / target_std)^2; fixed for every patient"
-}

@@ -89,6 +89,13 @@ def zip_file_map(zip_path):
         return {os.path.basename(n): n for n in zf.namelist() if n.endswith(".nii")}
 
 
+def clean_raw(raw_dir):
+    """Remove the .nii files of the patient just processed. Nothing else: the archive
+    (a .zip) may live nearby and must survive (it did not, once)."""
+    for f in glob.glob(os.path.join(raw_dir, "*.nii")):
+        os.remove(f)
+
+
 def used_gb(path):
     out = subprocess.run(["du", "-s", "--block-size=1M", path], text=True, capture_output=True).stdout
     return int(out.split()[0]) / 1024
@@ -99,7 +106,7 @@ def main():
     ap.add_argument("--order", nargs="+", type=int, required=True, help="patient numbers in processing order")
     ap.add_argument("--I0", type=float, required=True)
     ap.add_argument("--out", default="data/lits")
-    ap.add_argument("--raw", default="data/lits_raw", help="scratch folder for the downloaded files")
+    ap.add_argument("--raw", default="data/lits_raw_tmp", help="scratch folder for one patient's extracted/downloaded .nii files (NOT the archive's folder)")
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--margin", type=int, default=5)
     ap.add_argument("--max-used-gb", type=float, default=38.0)
@@ -107,6 +114,8 @@ def main():
     ap.add_argument("--zip", help="part-1 archive: extract from it instead of downloading per file")
     args = ap.parse_args()
 
+    if args.zip and os.path.abspath(os.path.dirname(args.zip)) == os.path.abspath(args.raw):
+        raise SystemExit("--raw must not be the folder that holds the archive")
     os.makedirs(args.raw, exist_ok=True)
     os.makedirs(args.out, exist_ok=True)
     files = zip_file_map(args.zip) if args.zip else kaggle_file_map(os.path.join(args.out, "kaggle_part1_files.json"))
@@ -114,9 +123,15 @@ def main():
     done, failed = [], []
     for n, k in enumerate(args.order):
         pid = f"lits_{k:03d}"
-        if os.path.exists(os.path.join(args.out, pid, "meta.json")):
-            print(f"{pid}: already converted, skipping", flush=True)
-            continue
+        meta_path = os.path.join(args.out, pid, "meta.json")
+        if os.path.exists(meta_path):
+            old_I0 = json.load(open(meta_path))["simulation"]["I0"]
+            if abs(old_I0 - args.I0) <= 1e-6 * args.I0:
+                print(f"{pid}: already converted with this I0, skipping", flush=True)
+                continue
+            print(f"{pid}: converted with I0 {old_I0:g}, redoing with {args.I0:g}", flush=True)
+        if args.zip and not os.path.exists(args.zip):
+            raise SystemExit(f"archive {args.zip} is missing")
         used = used_gb(args.home)
         if used > args.max_used_gb:
             print(f"STOP: home uses {used:.1f} GB > {args.max_used_gb} GB; not processing {pid} or later", flush=True)
@@ -147,11 +162,12 @@ def main():
             failed.append(pid)
             shutil.rmtree(os.path.join(args.out, pid), ignore_errors=True)
         finally:
-            for f in glob.glob(os.path.join(args.raw, "*")):
-                os.remove(f) if os.path.isfile(f) else shutil.rmtree(f)
+            clean_raw(args.raw)
         if (n + 1) % 10 == 0:
             print(f"[disk] home uses {used_gb(args.home):.1f} GB after {n + 1} patients", flush=True)
     print(f"finished: {len(done)} converted, {len(failed)} failed {failed}; home uses {used_gb(args.home):.1f} GB", flush=True)
+    if failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
