@@ -100,6 +100,21 @@ in CTformer. Heads = 8 divides every C that occurs (32, 64, 96, 128, 256, 384, 5
 | (b) `small` | only `vssblock3` (8x8 tokens, the cheapest scale) in all four band networks becomes attention | 4 modules | the smallest grid has only 64 tokens, so exact attention is almost free; tests whether global context at coarse scale is what helps |
 | (c) `parallel` | in the low-frequency branch each CZSS keeps its Mamba path and gains a parallel attention path; `out = x + (1-w)*mamba_update + w*attention_update`, `w = sigmoid(g)`, g learnable, init 0 | 4 modules wrapped | lets training decide how much attention to use; the learned w values (logged by `model.gates()`) are themselves a result |
 
+Measured on a MIG 3g.20gb slice (tests/check_hybrid.py, job 35429; batch-16 numbers
+scaled x2 for the hybrids):
+
+| model | params | s/step at batch 32 | peak memory at batch 32 |
+|---|---|---|---|
+| CT-Mamba | 50.8 M | 1.96 | 18.4 GiB |
+| (a) low | 59.4 M | ~2.2 | ~24 GiB |
+| (b) small | 197.9 M | ~2.9 | ~23 GiB |
+| (c) parallel | 61.7 M | ~2.3 | ~26 GiB |
+
+Note on (b): the 8x8 scale is the cheapest in tokens but the widest in channels (16C =
+512, 1024, 1024 and 1536 in the four band networks), and the token-to-token step maps
+9C -> C, so the attention blocks there are large. A 1x1 channel bottleneck in front of the
+attention would make (b) light again; left as a decision for the owner.
+
 Everything else (loss, data, schedule, best.pth rule, tiles at test time) is the official
 CT-Mamba via `CTMamba`, which the hybrid subclasses. Weight sharing across repeated
 applications is kept. The parameter counts, memory at batch 32 and seconds per step of

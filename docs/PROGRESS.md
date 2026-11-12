@@ -70,13 +70,18 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
   9 training patients, uniform liver-like soft tissue): std(quarter - full) median
   **48.2 HU** (IQR 41.3-54.6; per patient 37-62), full-dose std there 23.7 HU.
   Saved on the DGX in results/mayo_added_noise.json.
-- PROBLEM: Kaggle per-file download (`kaggle datasets download -f ...`) returns 404 for
-  every file of this dataset (CLI 1.7.4.5 and the REST endpoint, login and compute node).
-  The whole-dataset download works through the CLI but it buffers the 5.2 GB archive in RAM
-  on the login node (not acceptable). Working on a streaming download of the part-1 archive;
-  prep_lits.py already supports `--zip` (extracts one patient's two files at a time, never
-  unpacks the whole archive). Calibration of I0 (trial patient 0, then
-  I0 = 2e5 x (std_trial / 48.2)^2) and the conversion job wait on this.
+- PROBLEM + workaround: Kaggle per-file download (`kaggle datasets download -f ...`) returns
+  404 for every file of this dataset (CLI 1.7.4.5, the REST endpoint with and without a
+  version number, login and compute node; 3 attempts each). Only the whole part-1 archive
+  can be fetched, and the CLI/SDK buffer it in RAM, so: **job 35430** downloads the 5.2 GB
+  archive on cpu_student (16 GB RAM), then **job 35431** (afterok) runs
+  scripts/lits_pipeline.sh: trial conversion of TRAIN patient 0 at I0 = 2e5, calibration
+  I0 = 2e5 x (std_trial / 48.23)^2 written to configs/lits_sim.json, then all 51 patients
+  (0, the 10 locked test patients, then the train patients) extracted ONE at a time from
+  the archive (never unpacked as a whole), raw files deleted after each, disk logged every
+  10 patients, stop above 38 GB used. Afterwards results/lits_added_noise.json reports the
+  achieved liver noise of lits_000/002/004 against the target. The archive (5.2 GB) stays
+  until the pipeline is done; delete it afterwards to free space.
 
 ## Step 4: detection metrics (done)
 
@@ -109,9 +114,20 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
   `slurm/short50.sbatch` for the 4 chained 50-epoch runs: WRITTEN, NOT SUBMITTED.
 - Needed for this: `--run` (named run folders) and multi-file `--config` in train/predict/
   evaluate, and `model_args.warmup_epochs` in the CT-Mamba wrapper (default unchanged).
-- tests/check_hybrid.py: CPU part passes; GPU part (shapes, params, memory at batch 32,
-  s/step for all 4 models) = job 35428 on a MIG 3g.20gb. First line: plain CT-Mamba
-  50.8 M params, 1.92 s/step, 18.4 GiB peak on the MIG slice.
+- tests/check_hybrid.py: CPU part passes; GPU part = job 35429 (MIG 3g.20gb, 19.5 GiB,
+  HYBRID_TEST_OK; one process per model, batch 16 where 32 did not fit the slice):
+  | model | params | s/step | peak memory | note |
+  |---|---|---|---|---|
+  | ct_mamba (plain) | 50.8 M | 1.96 @ batch 32 | 18.4 GiB | measured at batch 32 |
+  | hybrid low | 59.4 M | 1.09 @ 16 -> ~2.2 @ 32 | 11.9 -> ~24 GiB | estimates scaled x2 |
+  | hybrid small | **197.9 M** | 1.47 @ 16 -> ~2.9 @ 32 | 11.3 -> ~23 GiB | see below |
+  | hybrid parallel | 61.7 M | 1.16 @ 16 -> ~2.3 @ 32 | 13.0 -> ~26 GiB | gates start at 0.5 |
+  All fit a 40 GB A100 at the official batch of 32. **Finding for review:** the "small"
+  variant is 4x the size of CT-Mamba because the smallest scale has the WIDEST channels
+  (16C = 512 / 1024 / 1024 / 1536 in the four band networks) and the T2T step maps 9C -> C.
+  It is a legitimate variant as specified, but not a light one; a channel bottleneck before
+  the attention (e.g. 1x1 to 128) would be the obvious fix if you want it. Not changed
+  without your decision. Parameter counts exclude the loss network.
 
 ## Step 7: Idea 1 lesion loss (code + tests done)
 
