@@ -57,3 +57,71 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
   35391** (`--dependency=afterany:35390`). Each runs scripts/run_all.sh (train, predict
   on L506 with best.pth, evaluate with per-slice scores, baseline row). At submission
   time 24 jobs were pending in gpu_student ahead of ours; expect a wait of days.
+
+## Step 3: LiTS data (in progress)
+
+- Locked split committed: `configs/lits_split.json` (seed 0, 20 % test): test patients
+  [2, 4, 10, 11, 22, 26, 28, 29, 32, 45], 41 train, all from part 1 (volumes 0-50).
+- `scripts/make_lits_lowdose.py`: NIfTI -> our .npy layout (full / quarter / mask, int16 HU,
+  radiological orientation, liver range +/- 5 slices) with projection-domain noise
+  insertion (parallel-beam skimage radon/iradon, Poisson + electronic noise, Yu et al.
+  2012 style; parallel-beam/no bow-tie documented as a limitation). Tests: tests/check_lits.py.
+- **Mayo calibration target** (`scripts/calibrate_lits_noise.py --mayo`, 276 slices of the
+  9 training patients, uniform liver-like soft tissue): std(quarter - full) median
+  **48.2 HU** (IQR 41.3-54.6; per patient 37-62), full-dose std there 23.7 HU.
+  Saved on the DGX in results/mayo_added_noise.json.
+- PROBLEM: Kaggle per-file download (`kaggle datasets download -f ...`) returns 404 for
+  every file of this dataset (CLI 1.7.4.5 and the REST endpoint, login and compute node).
+  The whole-dataset download works through the CLI but it buffers the 5.2 GB archive in RAM
+  on the login node (not acceptable). Working on a streaming download of the part-1 archive;
+  prep_lits.py already supports `--zip` (extracts one patient's two files at a time, never
+  unpacks the whole archive). Calibration of I0 (trial patient 0, then
+  I0 = 2e5 x (std_trial / 48.2)^2) and the conversion job wait on this.
+
+## Step 4: detection metrics (done)
+
+- `scripts/detect_eval.py`: 3D connected components (26-connectivity), lesion detected if any
+  prediction voxel overlaps it (optional --min-overlap), detection rate overall and for
+  lesions < 10 mm equivalent diameter (sphere of the lesion volume from voxel spacing),
+  false positives per patient, per-lesion Dice (in the dilated lesion box) and per-patient
+  Dice; works on data/lits slice folders or NIfTI/.npy volumes. 17 synthetic checks in
+  tests/check_detect.py pass.
+
+## Step 5: tumour finder (in progress)
+
+- Decision (Q6 default): "nnunet" is a venv on the ctmamba Python with system site
+  packages (~/venvs/nnunet; reuses torch, ~0.3 GB instead of ~6 GB). Install job 35426
+  running on cpu_student. Trainer default nnUNetTrainer_250epochs, 3d_fullres, fold 0.
+- Written: `scripts/prep_nnunet.py` (train patients only -> Dataset501_LiTSLiver; test
+  patients images-only for inference, optionally from a model's predictions) and
+  `slurm/nnunet_train.sbatch` (raw -> preprocess -> train -> predict normal-dose test
+  patients -> detect_eval). Submission waits on data/lits.
+
+## Step 6: Idea 2 hybrid (code + tests done; GPU numbers pending)
+
+- `docs/hybrid_design.md`: CT-Mamba shape map (PFEN -> Haar bands 32x32x32 -> 3 scales of
+  Z-scan Mamba per band -> inverse wavelet) and CTformer's T2T dilated attention, plus the
+  drop-in block and the 3 variants.
+- `ldct/models/ct_mamba_hybrid.py`: variants low / small / parallel (gate sigmoid, init 0.5),
+  built from CTformer's own Token_performer + Block; subclasses CTMamba so loss, data,
+  schedule stay identical. `configs/models/ct_mamba_hybrid.yaml`, `configs/variants/`.
+- `configs/short50.yaml` (cosine over 50 epochs, loss switch at epoch 3, best from 3) and
+  `slurm/short50.sbatch` for the 4 chained 50-epoch runs: WRITTEN, NOT SUBMITTED.
+- Needed for this: `--run` (named run folders) and multi-file `--config` in train/predict/
+  evaluate, and `model_args.warmup_epochs` in the CT-Mamba wrapper (default unchanged).
+- tests/check_hybrid.py: CPU part passes; GPU part (shapes, params, memory at batch 32,
+  s/step for all 4 models) = job 35428 on a MIG 3g.20gb. First line: plain CT-Mamba
+  50.8 M params, 1.92 s/step, 18.4 GiB peak on the MIG slice.
+
+## Step 7: Idea 1 lesion loss (code + tests done)
+
+- `ldct/lesion.py`: LesionWeightedL1 (tumour pixels x weight, default 5; exact plain L1
+  when no mask), tumour-aware patch sampling (`train.tumour_patch_share`), masks read from
+  `<patient>/mask/`. For models with their own loss (CT-Mamba) the weighted L1 is ADDED with
+  `lesion_extra_scale` (100 = the scale of CT-Mamba's own L1 term). Not supported for
+  models with a custom training_step (CoreDiff) - refused with a message.
+- `train.extra_train_sets` (LiTS train part of the split only; the test part is refused),
+  `--init <ckpt>` for fine-tuning, LiTS test set in default.yaml now = locked test patients
+  from the split file (never "all").
+- `configs/finetune_control.yaml` / `finetune_lesion.yaml` + `slurm/finetune.sbatch`:
+  WRITTEN, NOT SUBMITTED (also need data/lits first). 24 checks in tests/check_lesion.py pass.
