@@ -1,0 +1,26 @@
+{
+  "model": "ct_mamba",
+  "test_set": "mayo_L506",
+  "slices": 526,
+  "window_hu": [
+    -160,
+    240
+  ],
+  "mean": {
+    "psnr": 29.418675074577344,
+    "ssim": 0.8776001791088061,
+    "rmse": 13.849094795990846
+  },
+  "std": {
+    "psnr": 1.8294586591727722,
+    "ssim": 0.03759877839419191,
+    "rmse": 3.241468438556269
+  },
+  "timing": {
+    "slices": 526,
+    "seconds_per_slice": 1.057676430439488,
+    "device": "NVIDIA A100-SXM4-40GB",
+    "epoch": 237,
+    "checkpoint": "best.pth"
+  }
+}

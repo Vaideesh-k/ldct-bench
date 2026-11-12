@@ -1,0 +1,7 @@
+{
+ "epoch": 237,
+ "train_loss": 0.401545,
+ "missed": [],
+ "rule": "lowest train_loss among epochs >= 11",
+ "saved": "2026-10-18T09:00:54"
+}

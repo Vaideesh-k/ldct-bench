@@ -1,0 +1,3 @@
+model,test_set,psnr,ssim,rmse,seconds_per_slice,device,slices
+ct_mamba,mayo_L506,29.4187,0.8776,13.849,1.0577,NVIDIA A100-SXM4-40GB,526
+quarter_dose,mayo_L506,24.4688,0.8382,24.637,,,526
