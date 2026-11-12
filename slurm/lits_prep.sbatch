@@ -1,7 +1,8 @@
 #!/bin/bash
 # Build data/lits (download + convert + simulate, one patient at a time) on the CPU partition.
-#     sbatch slurm/lits_prep.sbatch <I0> <patient numbers in order...>
-# Uses the part-1 archive data/lits_raw/liver-tumor-segmentation.zip (see scripts/prep_lits.py).
+#     sbatch [--dependency=afterok:<download job>] slurm/lits_prep.sbatch
+# Runs scripts/lits_pipeline.sh: calibrate I0 on train patient 0, then convert everyone from
+# the part-1 archive data/lits_raw/liver-tumor-segmentation.zip (see scripts/prep_lits.py).
 #SBATCH --job-name=lits_prep
 #SBATCH --partition=cpu_student
 #SBATCH --ntasks=1
@@ -12,13 +13,11 @@
 #SBATCH --error=/dgxa_home/se23uari128/ldct-bench/logs/lits_prep_%j.err
 
 set -euo pipefail
-I0=${1:?I0}
-shift
 source ~/miniforge3/etc/profile.d/conda.sh
 conda activate ctmamba
 cd ~/ldct-bench
-echo "host: $(hostname) | date: $(date) | I0 $I0 | order: $*"
+echo "host: $(hostname) | date: $(date)"
 du -sh ~ | tail -1
-python scripts/prep_lits.py --zip data/lits_raw/liver-tumor-segmentation.zip --I0 "$I0" --workers 16 --order "$@"
+bash scripts/lits_pipeline.sh
 du -sh ~ | tail -1
 echo "LITS_PREP_DONE $(date)"

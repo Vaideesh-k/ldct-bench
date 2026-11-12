@@ -2,11 +2,17 @@
 CPU part (any machine): the attention block alone.
 GPU part (NVIDIA + mamba-ssm, e.g. a MIG slice): the 4 full models - shapes, parameter
 counts, peak memory at the official batch of 32 patches, seconds per training step."""
+import argparse
 import os
 import sys
 import time
 
 import torch
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--only", help="GPU part: run only this model (plain | low | small | parallel); one process per model avoids leftover memory")
+ap.add_argument("--batches", default="32,16,8", help="batch sizes to try in turn until one fits")
+ARGS = ap.parse_args()
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ldct.models.ct_mamba_hybrid import T2TDilatedAttention, ParallelBlock, VARIANTS   # noqa: E402
@@ -25,7 +31,7 @@ def n_params(m):
 
 
 # ---------------------------------------------------------------- CPU: the block itself
-for dim, grid in ((32, 32), (128, 16), (512, 8), (96, 32)):
+for dim, grid in ([] if ARGS.only else ((32, 32), (128, 16), (512, 8), (96, 32))):
     blk = T2TDilatedAttention(dim, grid)
     x = torch.randn(2, grid, grid, dim)
     y = blk(x)
@@ -60,47 +66,50 @@ check("parallel block with gate -> 0 equals the Mamba block", torch.allclose(pb(
 # ---------------------------------------------------------------- GPU: the full models
 if not torch.cuda.is_available():
     print("\nno CUDA: skipped the full-model checks (run slurm/hybrid_test.sbatch on the DGX)")
+elif not ARGS.only:
+    print("\nCUDA found: run the GPU part one model at a time: --only plain|low|small|parallel")
 else:
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
     from train import count_params, training_loss
     from ldct.models import build_model
     dev = torch.device("cuda")
-    base_params = None
-    rows = []
-    for name, kwargs in (("ct_mamba", {}),) + tuple(("ct_mamba_hybrid", {"variant": v}) for v in VARIANTS):
-        torch.manual_seed(0)
-        torch.cuda.empty_cache(); torch.cuda.reset_peak_memory_stats()
-        model = build_model(name, **kwargs).to(dev).train()
-        model.epoch = 11                                   # full Deep-NPS loss, the expensive case
-        net, _ = count_params(model)
-        label = kwargs.get("variant", "plain")
-        x = torch.rand(32, 1, 64, 64, device=dev); y = torch.rand(32, 1, 64, 64, device=dev)
-        with torch.no_grad():
-            model.eval(); out = model(x); model.train()
-        check(f"{label}: (32,1,64,64) -> same shape", out.shape == x.shape)
-        if label != "plain":
-            check(f"{label}: swapped {model.swapped} block(s)", model.swapped == (4 if label != "small" else 4))
-        opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=1e-3)
-        times = []
-        for i in range(8):
-            torch.cuda.synchronize(); t0 = time.time()
-            loss = training_loss(model, x, y)
-            opt.zero_grad(set_to_none=True); loss.backward(); opt.step()
-            torch.cuda.synchronize(); times.append(time.time() - t0)
-        check(f"{label}: finite loss after 8 steps", torch.isfinite(loss).item())
-        step = sum(times[3:]) / len(times[3:])
-        peak = torch.cuda.max_memory_allocated() / 2**30
-        rows.append((label, net, step, peak))
-        if label == "plain":
-            base_params = net
-        print(f"  {label}: {net:,} params | {step:.3f} s/step at batch 32 | peak {peak:.2f} GiB")
-        if label == "parallel":
-            print(f"  gates: {model.gates()}")
-        del model, opt, loss, out
-    print("\n| model | params | s/step (batch 32) | peak GiB |\n|---|---|---|---|")
-    for label, net, step, peak in rows:
-        print(f"| {label} | {net:,} | {step:.3f} | {peak:.2f} |")
-    check("hybrids differ from plain in parameter count", all(r[1] != base_params for r in rows[1:]))
+    label = ARGS.only
+    name, kwargs = ("ct_mamba", {}) if label == "plain" else ("ct_mamba_hybrid", {"variant": label})
+    torch.manual_seed(0)
+    model = build_model(name, **kwargs).to(dev).train()
+    model.epoch = 11                                   # full Deep-NPS loss, the expensive case
+    net, _ = count_params(model)
+    with torch.no_grad():
+        model.eval(); out = model(torch.rand(4, 1, 64, 64, device=dev)); model.train()
+    check(f"{label}: (4,1,64,64) -> same shape", out.shape == (4, 1, 64, 64))
+    if label != "plain":
+        check(f"{label}: swapped 4 block(s)", model.swapped == 4)
+    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=1e-3)
+    result = None
+    for bs in [int(b) for b in ARGS.batches.split(",")]:
+        try:
+            torch.cuda.empty_cache(); torch.cuda.reset_peak_memory_stats()
+            x = torch.rand(bs, 1, 64, 64, device=dev); y = torch.rand(bs, 1, 64, 64, device=dev)
+            times = []
+            for i in range(8):
+                torch.cuda.synchronize(); t0 = time.time()
+                loss = training_loss(model, x, y)
+                opt.zero_grad(set_to_none=True); loss.backward(); opt.step()
+                torch.cuda.synchronize(); times.append(time.time() - t0)
+            check(f"{label}: finite loss after 8 steps at batch {bs}", torch.isfinite(loss).item())
+            result = (bs, sum(times[3:]) / len(times[3:]), torch.cuda.max_memory_allocated() / 2**30)
+            break
+        except torch.OutOfMemoryError:
+            print(f"  {label}: batch {bs} does not fit this GPU slice, trying smaller")
+            opt.zero_grad(set_to_none=True)
+    check(f"{label}: trained at some batch size", result is not None)
+    if result:
+        bs, step, peak = result
+        scale = 32 / bs
+        extra = f" | scaled to batch 32: ~{step * scale:.2f} s/step, ~{peak * scale:.1f} GiB (estimate)" if bs != 32 else ""
+        print(f"RESULT | {label} | {net:,} params | batch {bs} | {step:.3f} s/step | peak {peak:.2f} GiB{extra}")
+    if label == "parallel":
+        print(f"  gates: {model.gates()}")
 
 print("\nFAILED:" if failed else "\nAll hybrid checks passed.", failed or "")
 sys.exit(1 if failed else 0)

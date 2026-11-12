@@ -17,7 +17,12 @@ conda activate ctmamba
 cd ~/ldct-bench
 echo "host: $(hostname) | date: $(date)"
 nvidia-smi --query-gpu=name,memory.total --format=csv
-python tests/check_hybrid.py
+python tests/check_hybrid.py                      # CPU part
+for m in plain low small parallel; do             # GPU part, one process per model
+  echo "=== $m"
+  python tests/check_hybrid.py --only $m 2>&1 | grep -v Warning | tail -8
+done
+grep -h "^RESULT" logs/hybrid_test_${SLURM_JOB_ID}.out || true
 echo "=== lesion loss / sampling checks"
 python tests/check_lesion.py
 echo "HYBRID_TEST_OK $(date)"
