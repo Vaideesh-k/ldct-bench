@@ -29,15 +29,15 @@ def _read_yaml(path):
 
 def load_config(model_name, extra=None):
     """Load configs/default.yaml, then apply configs/models/<model_name>.yaml
-    on top if it exists, then the optional `extra` yaml file (used by tests to
-    point everything at temporary folders)."""
+    on top if it exists, then the optional `extra` yaml file(s), in order (used by
+    tests to point everything at temporary folders, and by short runs / variants)."""
     cfg = _read_yaml(ROOT / "configs" / "default.yaml")
 
     model_file = ROOT / "configs" / "models" / f"{model_name}.yaml"
     if model_file.exists():
         cfg = _deep_merge(cfg, _read_yaml(model_file))
-    if extra:
-        cfg = _deep_merge(cfg, _read_yaml(extra))
+    for path in ([extra] if isinstance(extra, (str, bytes, Path)) else (extra or [])):
+        cfg = _deep_merge(cfg, _read_yaml(path))
 
     cfg["model_name"] = model_name
     check_locked_patient(cfg)

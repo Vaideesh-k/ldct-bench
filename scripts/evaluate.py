@@ -34,7 +34,8 @@ def parse_args():
     who.add_argument("--model", help="name of a trained model, e.g. redcnn")
     who.add_argument("--baseline", action="store_true", help="score the noisy quarter-dose input itself")
     ap.add_argument("--sets", nargs="+", help="test sets from the config (default: all whose folder exists)")
-    ap.add_argument("--config", help="extra yaml merged on top of the configs (used by tests)")
+    ap.add_argument("--config", nargs="+", help="extra yaml file(s) merged on top of the configs, in order")
+    ap.add_argument("--run", help="run folder under runs/ and row name in summary.csv (default: the model name)")
     return ap.parse_args()
 
 
@@ -84,8 +85,8 @@ def update_summary(path, new_row):
 
 def main():
     args = parse_args()
-    tag = BASELINE if args.baseline else args.model
-    cfg = load_config(tag, args.config)
+    tag = BASELINE if args.baseline else (args.run or args.model)
+    cfg = load_config(BASELINE if args.baseline else args.model, args.config)
     sets = choose_test_sets(cfg, args.sets)
 
     run_dir = os.path.join(resolve(cfg["output_dir"]), tag)

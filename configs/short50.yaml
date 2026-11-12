@@ -1,0 +1,11 @@
+# 50-epoch short run, everything scaled from the 250-epoch CT-Mamba recipe by 1/5:
+#   cosine schedule over 50 epochs (train.py sets T_max = train.epochs),
+#   Deep-NPS loss switch after epoch 2 instead of 10 (warmup_epochs 2 -> switch at epoch 3),
+#   best.pth chosen among epochs >= 3 instead of >= 11.
+# Use with --run <name> so the folder never collides with the 250-epoch run:
+#   bash scripts/run_all.sh ct_mamba --run ct_mamba_50 --config configs/short50.yaml
+model_args:
+  warmup_epochs: 2
+train:
+  epochs: 50
+  best_from_epoch: 3

@@ -1,0 +1,3 @@
+# ct_mamba_hybrid variant (c): parallel attention branch with a learnable gate, low-frequency branch
+model_args:
+  variant: parallel

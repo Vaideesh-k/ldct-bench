@@ -97,8 +97,9 @@ class CTMamba(nn.Module):
 
     loss_modules = ("nps",)   # not part of the denoiser; train.py counts it separately
 
-    def __init__(self):
+    def __init__(self, warmup_epochs=WARMUP_EPOCHS):
         super().__init__()
+        self.warmup_epochs = warmup_epochs   # 10 officially; short runs scale it down (configs/short50.yaml)
         CT_Mamba, NPSloss = _import_official()
         with _inside_repo():
             self.net = CT_Mamba()            # model.py line 264; built like utils/model_utils.py line 62
@@ -129,7 +130,7 @@ class CTMamba(nn.Module):
         return total / len(self.nps.blocks)
 
     def compute_loss(self, pred, target, inp):
-        if self.epoch <= WARMUP_EPOCHS:
+        if self.epoch <= self.warmup_epochs:
             # NPSloss1: radial weights are 0.0, so only loss1 + loss4 (NPSloss.py lines 371, 375-386)
             loss1 = self.nps.mae_weight * self.nps.mae_loss(pred, target) * 100 + 1e-4
             loss4 = self.nps.feature_weight * self._feature_loss(pred, target)
@@ -139,5 +140,5 @@ class CTMamba(nn.Module):
         return loss
 
 
-def build():
-    return CTMamba()
+def build(warmup_epochs=WARMUP_EPOCHS):
+    return CTMamba(warmup_epochs=warmup_epochs)

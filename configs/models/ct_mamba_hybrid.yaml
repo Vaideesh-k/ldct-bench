@@ -1,0 +1,23 @@
+# Idea 2: CT-Mamba with CTformer attention blocks (ldct/models/ct_mamba_hybrid.py).
+# Training settings are IDENTICAL to configs/models/ct_mamba.yaml by design; only the
+# model differs. The variant is chosen with an extra config file:
+#     --config configs/variants/hybrid_small.yaml   (or hybrid_parallel.yaml; default: low)
+
+model_args:
+  variant: low            # low | small | parallel (see the model docstring)
+  warmup_epochs: 10       # loss switch epoch, as CT-Mamba
+
+train:
+  epochs: 250
+  batch_size: 8
+  patch: 64
+  patch_n: 4
+  lr: 1.0e-3
+  lr_min: 1.0e-6
+  weight_decay: 0.02
+  best_from_epoch: 11
+
+infer:
+  patch: 64
+  stride: 32
+  batch: 64

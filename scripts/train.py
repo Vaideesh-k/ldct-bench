@@ -4,8 +4,11 @@
     python scripts/train.py --model redcnn --resume     continue after a crash / stop
     python scripts/train.py --model redcnn --smoke      1 epoch, 5 steps: does it run at all?
     python scripts/train.py --model redcnn --epochs 10  fewer epochs than the config
+    python scripts/train.py --model ct_mamba --run ct_mamba_50 --config configs/short50.yaml
+                                                        a named run with extra settings
 
-Everything goes to runs/<model>/ (runs/<model>_smoke/ for --smoke):
+Everything goes to runs/<run>/ (run = the model name unless --run is given;
+runs/<run>_smoke/ for --smoke):
     latest.pth      saved every epoch, used by --resume
     best.pth        the epoch with the lowest training loss = the final model
     train_log.csv   one row per epoch: epoch, train_loss, val_l1, lr, seconds
@@ -42,8 +45,11 @@ def parse_args():
     ap.add_argument("--resume", action="store_true", help="continue from runs/<model>/latest.pth")
     ap.add_argument("--smoke", action="store_true", help="1 epoch, 5 steps, saved in runs/<model>_smoke")
     ap.add_argument("--epochs", type=int, help="override train.epochs from the config")
-    ap.add_argument("--config", help="extra yaml merged on top of the configs (used by tests)")
-    return ap.parse_args()
+    ap.add_argument("--config", nargs="+", help="extra yaml file(s) merged on top of the configs, in order")
+    ap.add_argument("--run", help="name of the run folder under runs/ (default: the model name)")
+    args = ap.parse_args()
+    args.run = args.run or args.model
+    return args
 
 
 def seed_worker(worker_id):
@@ -140,12 +146,12 @@ def main():
 
     if args.smoke:
         t["epochs"], t["max_steps_per_epoch"] = 1, 5
-        run_dir = os.path.join(resolve(cfg["output_dir"]), f"{args.model}_smoke")
+        run_dir = os.path.join(resolve(cfg["output_dir"]), f"{args.run}_smoke")
         shutil.rmtree(run_dir, ignore_errors=True)   # a smoke run always starts clean
     else:
         if args.epochs:
             t["epochs"] = args.epochs
-        run_dir = os.path.join(resolve(cfg["output_dir"]), args.model)
+        run_dir = os.path.join(resolve(cfg["output_dir"]), args.run)
     os.makedirs(run_dir, exist_ok=True)
     latest, best, log = (os.path.join(run_dir, f) for f in ("latest.pth", "best.pth", "train_log.csv"))
 

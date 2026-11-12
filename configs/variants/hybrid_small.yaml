@@ -1,0 +1,3 @@
+# ct_mamba_hybrid variant (b): attention only at the smallest scale (8x8 tokens) of all 4 band networks
+model_args:
+  variant: small

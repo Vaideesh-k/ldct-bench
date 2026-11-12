@@ -31,8 +31,11 @@ def parse_args():
     ap.add_argument("--model", required=True, help="name of a file in ldct/models/, e.g. redcnn")
     ap.add_argument("--sets", nargs="+", help="test sets from the config (default: all whose folder exists)")
     ap.add_argument("--checkpoint", default="best.pth", help="file in runs/<model>/ (default best.pth)")
-    ap.add_argument("--config", help="extra yaml merged on top of the configs (used by tests)")
-    return ap.parse_args()
+    ap.add_argument("--config", nargs="+", help="extra yaml file(s) merged on top of the configs, in order")
+    ap.add_argument("--run", help="run folder under runs/ (default: the model name)")
+    args = ap.parse_args()
+    args.run = args.run or args.model
+    return args
 
 
 def load_trained_model(cfg, model_name, ckpt_path, device):
@@ -73,11 +76,11 @@ def main():
     args = parse_args()
     cfg = load_config(args.model, args.config)
     sets = choose_test_sets(cfg, args.sets)
-    run_dir = os.path.join(resolve(cfg["output_dir"]), args.model)
+    run_dir = os.path.join(resolve(cfg["output_dir"]), args.run)
 
     device = pick_device(cfg["device"])
     model, epoch = load_trained_model(cfg, args.model, os.path.join(run_dir, args.checkpoint), device)
-    print(f"Model {args.model}, {args.checkpoint} (epoch {epoch}), device {device_name(device)}")
+    print(f"Model {args.model} (run {args.run}), {args.checkpoint} (epoch {epoch}), device {device_name(device)}")
 
     for set_name in sets:
         out_dir = os.path.join(run_dir, "predictions", set_name)
