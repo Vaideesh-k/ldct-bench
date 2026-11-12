@@ -1,0 +1,13 @@
+# Idea 1 CONTROL fine-tune of CT-Mamba: same data (Mayo train + LiTS train patients, simulated
+# quarter dose), same short schedule, NO lesion weighting and NO tumour-aware sampling.
+#   bash scripts/run_all.sh ct_mamba --run ct_mamba_ft_control --config configs/finetune_control.yaml \
+#        --init runs/ct_mamba/best.pth     (train.py takes --init; predict/evaluate ignore it)
+model_args:
+  warmup_epochs: 0          # the full Deep-NPS loss from epoch 1 (the model is already trained)
+train:
+  epochs: 20
+  lr: 1.0e-4                # a tenth of the training lr: fine-tuning
+  lr_min: 1.0e-6
+  best_from_epoch: 1
+  extra_train_sets:
+    - {root: data/lits, split: configs/lits_split.json, part: train, prefix: lits_}

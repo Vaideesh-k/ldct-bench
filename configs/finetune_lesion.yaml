@@ -1,0 +1,16 @@
+# Idea 1 fine-tune of CT-Mamba WITH the lesion-weighted L1 and tumour-aware sampling.
+# Identical to configs/finetune_control.yaml except the three Idea-1 settings.
+#   bash scripts/run_all.sh ct_mamba --run ct_mamba_ft_lesion --config configs/finetune_lesion.yaml \
+#        --init runs/ct_mamba/best.pth
+model_args:
+  warmup_epochs: 0
+train:
+  epochs: 20
+  lr: 1.0e-4
+  lr_min: 1.0e-6
+  best_from_epoch: 1
+  extra_train_sets:
+    - {root: data/lits, split: configs/lits_split.json, part: train, prefix: lits_}
+  lesion_weight: 5.0        # tumour pixels count 5x in the extra L1 term
+  lesion_extra_scale: 100.0 # CT-Mamba's own L1 term is L1*100, so the extra term uses the same scale
+  tumour_patch_share: 0.5   # half the patches of a tumour slice are centred on a tumour

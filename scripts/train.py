@@ -32,6 +32,7 @@ from tqdm import tqdm
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ldct.config import load_config, resolve
 from ldct.data import PatchPairs, SlicePairs, collate_patches, list_pairs, unit_to_hu
+from ldct.lesion import LesionWeightedL1
 from ldct.infer import denoise_slice
 from ldct.models import build_model
 from ldct.runtime import pick_device
@@ -47,6 +48,7 @@ def parse_args():
     ap.add_argument("--epochs", type=int, help="override train.epochs from the config")
     ap.add_argument("--config", nargs="+", help="extra yaml file(s) merged on top of the configs, in order")
     ap.add_argument("--run", help="name of the run folder under runs/ (default: the model name)")
+    ap.add_argument("--init", help="start from the weights in this checkpoint (fine-tuning; not --resume)")
     args = ap.parse_args()
     args.run = args.run or args.model
     return args
@@ -64,12 +66,16 @@ def make_loaders(cfg, device):
     try:
         train_pairs = list_pairs(root, d["train_patients"])
         val_pairs = list_pairs(root, d["val_patients"], every=d["val_every_kth_slice"])
+        for extra in t.get("extra_train_sets") or []:          # e.g. LiTS train patients (Idea 1)
+            train_pairs += list_pairs(resolve(extra["root"]), extra_patients(extra))
     except FileNotFoundError as e:
         raise SystemExit(f"{e}\nPrepare the data first: python scripts/prep_mayo.py --src <mayo_raw> --dst {d['mayo_root']}")
 
+    lesion = bool(t.get("lesion_weight")) or float(t.get("tumour_patch_share") or 0) > 0
     train_loader = DataLoader(
         PatchPairs(train_pairs, patch=t["patch"], patch_n=t["patch_n"],
-                   context=d.get("context", 0), augment=d.get("augment", False)),
+                   context=d.get("context", 0), augment=d.get("augment", False),
+                   with_masks=lesion, tumour_share=float(t.get("tumour_patch_share") or 0)),
         batch_size=t["batch_size"], shuffle=True, num_workers=t["workers"],
         collate_fn=collate_patches, worker_init_fn=seed_worker,
         pin_memory=device.type == "cuda")
@@ -79,14 +85,34 @@ def make_loaders(cfg, device):
     return train_loader, val_loader
 
 
-def training_loss(model, inp, target):
-    """Use the model's own training step or loss if it has one, else L1."""
+def extra_patients(spec):
+    """Patients of an extra training set: a list, or one part of a split file.
+    The locked LiTS test patients can never be chosen: part must be 'train'."""
+    if "patients" in spec:
+        return list(spec["patients"])
+    import json
+    with open(resolve(spec["split"])) as f:
+        split = json.load(f)
+    if spec.get("part", "train") != "train":
+        raise SystemExit("extra_train_sets: only the 'train' part of a split may be used for training")
+    prefix = spec.get("prefix", "lits_")
+    return [f"{prefix}{k:03d}" for k in split["train"]]
+
+
+def training_loss(model, inp, target, tumour=None, lesion_loss=None, extra_scale=1.0):
+    """Use the model's own training step or loss if it has one, else L1.
+    With Idea 1 on (lesion_loss given): plain-L1 models use the lesion-weighted L1 instead;
+    models with their own loss get `extra_scale * weighted L1` added."""
     if hasattr(model, "training_step"):
-        return model.training_step(inp, target)
+        loss = model.training_step(inp, target)
+        if lesion_loss is not None:
+            raise SystemExit("lesion_weight is not supported for models with a custom training_step")
+        return loss
     pred = model(inp)
     if hasattr(model, "compute_loss"):
-        return model.compute_loss(pred, target, inp)
-    return F.l1_loss(pred, target)
+        loss = model.compute_loss(pred, target, inp)
+        return loss + extra_scale * lesion_loss(pred, target, tumour) if lesion_loss is not None else loss
+    return lesion_loss(pred, target, tumour) if lesion_loss is not None else F.l1_loss(pred, target)
 
 
 def validate(model, loader, cfg, device):
@@ -184,6 +210,10 @@ def main():
         print(f"Resuming after epoch {ckpt['epoch']} (best so far: epoch {best_epoch}, loss {best_loss:.6f})")
     elif args.resume:
         print(f"No {latest} yet: starting a new run.")
+    if args.init and start_epoch == 1:
+        ckpt = torch.load(resolve(args.init), map_location=device)
+        model.load_state_dict(ckpt["model"])
+        print(f"Initialised from {args.init} (epoch {ckpt.get('epoch')}); optimiser and schedule start fresh.")
 
     if start_epoch > t["epochs"]:
         print(f"Already trained {t['epochs']} epochs. Nothing to do.")
@@ -191,6 +221,10 @@ def main():
 
     train_loader, val_loader = make_loaders(cfg, device)
     torch.manual_seed(cfg["seed"] + start_epoch)   # a resumed run does not repeat the same shuffles
+    lesion_loss = LesionWeightedL1(t["lesion_weight"]) if t.get("lesion_weight") else None
+    if lesion_loss:
+        print(f"Idea 1: lesion-weighted L1 (x{t['lesion_weight']} inside tumours, extra scale "
+              f"{t.get('lesion_extra_scale', 1.0)}), tumour patch share {t.get('tumour_patch_share') or 0}")
 
     for epoch in range(start_epoch, t["epochs"] + 1):
         model.train()
@@ -198,10 +232,12 @@ def main():
         start, total, steps = time.time(), 0.0, 0
         lr = optimizer.param_groups[0]["lr"]
 
-        for x, y in tqdm(train_loader, desc=f"epoch {epoch}/{t['epochs']}", leave=False):
+        for batch in tqdm(train_loader, desc=f"epoch {epoch}/{t['epochs']}", leave=False):
             if t["max_steps_per_epoch"] and steps >= t["max_steps_per_epoch"]:
                 break
-            loss = training_loss(model, x.to(device), y.to(device))
+            x, y = batch[0].to(device), batch[1].to(device)
+            tumour = batch[2].to(device) if len(batch) == 3 else None
+            loss = training_loss(model, x, y, tumour, lesion_loss, float(t.get("lesion_extra_scale", 1.0)))
             if not torch.isfinite(loss):
                 raise SystemExit(f"The loss became {loss.item()} at epoch {epoch}. "
                                  f"latest.pth still holds epoch {epoch - 1}; try a lower lr.")

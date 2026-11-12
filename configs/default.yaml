@@ -25,9 +25,12 @@ data:
     mayo_L506:              # the locked Mayo test patient
       root: data/mayo
       patients: [L506]
-    lits:                   # LiTS liver CT dataset, to test on unseen data
+    lits:                   # LiTS liver CT (simulated quarter dose), to test on unseen data
       root: data/lits
-      patients: all         # use every patient in the folder
+      patients:             # ONLY the locked test patients of the committed split
+        split: configs/lits_split.json
+        part: test
+        prefix: lits_
 
 train:
   epochs: 250               # number of full passes over the training data
@@ -43,6 +46,12 @@ train:
   best_from_epoch: 1        # best.pth = lowest training loss among epochs >= this
                             # (raise it if the model's loss formula changes mid-training)
   max_steps_per_epoch: null # cap on steps per epoch (null = no cap; handy for quick tests)
+  # Idea 1 (ldct/lesion.py), both off by default and only active for slices that have a mask:
+  lesion_weight: null       # e.g. 5.0 = tumour pixels count 5x in the L1 loss
+  lesion_extra_scale: 1.0   # for models with their own loss: loss + scale * weighted L1
+  tumour_patch_share: 0.0   # e.g. 0.5 = half the patches of a tumour slice are centred on a tumour
+  extra_train_sets: []      # more (root, patients) pairs to train on, e.g. LiTS train patients
+                            #   - {root: data/lits, split: configs/lits_split.json, part: train}
 
 infer:
   patch: null               # crop size at test time (null = process the whole image at once)
