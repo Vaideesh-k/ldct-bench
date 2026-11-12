@@ -22,10 +22,11 @@ submitted and chained.
 
 | job | what | state when I last looked | expected |
 |---|---|---|---|
-| 35431 | LiTS conversion, all 51 patients, test patients first | running (cpu_student) | ~1-2 h; stops by itself above 38 GB used |
+| 35520 | re-download of the LiTS part-1 archive (my first pipeline run deleted it, see Problems) | pending (cpu_student) | ~25 min |
+| 35521 | LiTS build: iterative dose calibration on train patient 0, then all 51 patients, test patients first | pending, after 35520 | ~1-2 h; stops by itself above 38 GB used; exits 1 if any patient fails |
 | 35390 | CTformer full run (530k updates) + predict + evaluate L506 | pending, 21st in the full-A100 queue | SLURM estimate: starts 14 Nov 00:23, then ~1 day |
 | 35391 | CoreDiff full run (150k updates) + predict + evaluate L506 | pending, after 35390 | ~1.5 days after CTformer |
-| 35434 | nnU-Net 3d_fullres, 250-epoch trainer, fold 0, then predict the locked test patients at normal dose + detect_eval | pending, after 35431 and 35391 | ~0.5-1 day once it starts |
+| 35522 | nnU-Net 3d_fullres, 250-epoch trainer, fold 0, then predict the locked test patients at normal dose + detect_eval | pending, after 35521 and 35391 | ~0.5-1 day once it starts |
 
 Results land in results/summary.csv, runs/<model>/scores_mayo_L506.csv and
 results/detect_nnunet_fulldose.json on the DGX; logs in ~/ldct-bench/logs/.
@@ -34,8 +35,10 @@ results/detect_nnunet_fulldose.json on the DGX; logs in ~/ldct-bench/logs/.
 
 - Mayo quarter-dose added noise in uniform liver-like tissue: median 48.2 HU (IQR 41-55),
   full-dose std there 23.7 HU.
-- LiTS simulation calibrated on train patient 0: I0 = 1.41e6 gives 48 HU added liver noise
-  at quarter dose (trial at 2e5 gave 128 HU, consistent with the 1/sqrt(I0) law).
+- LiTS simulation: trial at I0 = 2e5 gave 128 HU added liver noise, the one-step estimate
+  1.41e6 gave 37.4 HU (electronic noise breaks the 1/sqrt law), so the calibration now
+  iterates; the final I0 will be in configs/lits_sim.json on the DGX (copy it to the repo:
+  `scp dgx:ldct-bench/configs/lits_sim.json configs/` and commit) and in logs/lits_prep_35521.out.
 - Hybrid measurements (MIG slice, batch 32, estimates for the hybrids): CT-Mamba 50.8 M /
   1.96 s/step / 18.4 GiB; low 59.4 M / ~2.2 / ~24 GiB; small 197.9 M / ~2.9 / ~23 GiB;
   parallel 61.7 M / ~2.3 / ~26 GiB. All fit a 40 GB A100.
@@ -44,8 +47,10 @@ results/detect_nnunet_fulldose.json on the DGX; logs in ~/ldct-bench/logs/.
 ## Problems
 
 - Kaggle refuses per-file downloads for this dataset (404 everywhere), so the whole 5.2 GB
-  part-1 archive was downloaded on a CPU node and patients are extracted one at a time.
-  The archive is still in data/lits_raw/ (delete it once 35431 is done, 5.2 GB).
+  part-1 archive is downloaded on a CPU node and patients are extracted one at a time.
+- My first LiTS pipeline run deleted that archive after patient 0 (scratch folder = archive
+  folder) and reported success; fixed and tested (commit 052ab2c), archive re-downloading
+  as job 35520. Cost: ~1 h and 5 GB of traffic. Delete data/lits_raw/*.zip after 35521 is done.
 - The full-A100 queue is long: CTformer will wait about 1.5 days before it starts.
 - Hybrid variant "small" is 4x the size of CT-Mamba (the 8x8 scale has the widest channels);
   see docs/hybrid_design.md for the one-line fix if you want a lighter version.

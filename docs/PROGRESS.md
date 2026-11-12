@@ -87,9 +87,22 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
 - **Calibration done** (train patient lits_000, 35 liver slices, 45 s with 16 workers):
   trial I0 = 2e5 gave 128.2 HU added noise in the liver; target 48.2 HU ->
   **I0 = 1.41e6 photons per detector element**, written to `configs/lits_sim.json`
-  (committed). Conversion of all 51 patients with this I0 is running in job 35431
-  (test patients first). The achieved noise of lits_000/002/004 is re-measured at the end
-  (results/lits_added_noise.json on the DGX).
+  (committed at the time). Conversion job 35431 then went wrong, twice over, both my bugs:
+  1. prep_lits.py used the archive's folder as its scratch dir and its cleanup deleted the
+     5.2 GB archive after patient 0 -> the other 50 patients "failed" (file not found),
+     and the job still exited 0.
+  2. the one-step calibration undershot: lits_000 rebuilt at I0 = 1.41e6 had 37.4 HU added
+     liver noise, not 48.2. The electronic-noise term (sigma_e = 10 counts) dominates the
+     most attenuated rays at low I0, so noise does not scale as 1/sqrt(I0) between 2e5 and 1.4e6.
+  Fixes (commit 052ab2c): scratch dir `data/lits_raw_tmp` (refuses to equal the archive
+  folder), cleanup removes only .nii files (tested), any failed patient makes the job exit
+  1 (so afterok chains stop), patients converted with another I0 are redone, and the
+  calibration now ITERATES I0 <- I0 x (std/target)^2 on train patient 0 until within 3 %
+  (max 5 rounds, ~1 min each), recording the history in configs/lits_sim.json.
+  lits_sim.json was removed from the branch until the new calibration exists.
+- RESUBMITTED (14:10): download **35520** -> LiTS build **35521** (afterok) ->
+  nnU-Net **35522** (afterok:35521 + afterany:35391). The old nnU-Net job 35434 was
+  cancelled (its data dependency had been "satisfied" by the exit-0 failure).
 
 ## Step 4: detection metrics (done)
 
@@ -106,7 +119,7 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
   packages (~/venvs/nnunet; reuses torch). Installed by job 35426 on cpu_student after
   ~20 min of PyPI retries: nnunetv2 2.8.1, 608 MB, imports and CLI verified.
   Trainer nnUNetTrainer_250epochs, 3d_fullres, fold 0 (default 1000 epochs would be ~3-4 days).
-- **SUBMITTED: nnunet = job 35434**, `--dependency=afterok:35431,afterany:35391` (after the
+- SUBMITTED: nnunet = job 35434 (cancelled later, see step 3) then **35522**, `--dependency=afterok:35521,afterany:35391` (after the
   LiTS build and after the CoreDiff job, so it never runs next to another full-A100 job of
   ours). It writes the raw dataset (train patients only), preprocesses, trains fold 0,
   predicts the locked test patients at normal dose and runs detect_eval.py on them.
