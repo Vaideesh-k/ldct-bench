@@ -84,6 +84,12 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
   until the pipeline is done; delete it afterwards to free space.
 - Download job 35430 COMPLETED in 24 min: 5.19 GB, 182 members (51 volumes + 131 masks),
   `testzip` clean. Home at 22 GB. Pipeline job 35431 started 13:55 (calibration first).
+- **Calibration done** (train patient lits_000, 35 liver slices, 45 s with 16 workers):
+  trial I0 = 2e5 gave 128.2 HU added noise in the liver; target 48.2 HU ->
+  **I0 = 1.41e6 photons per detector element**, written to `configs/lits_sim.json`
+  (committed). Conversion of all 51 patients with this I0 is running in job 35431
+  (test patients first). The achieved noise of lits_000/002/004 is re-measured at the end
+  (results/lits_added_noise.json on the DGX).
 
 ## Step 4: detection metrics (done)
 
