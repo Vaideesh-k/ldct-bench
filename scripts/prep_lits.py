@@ -3,7 +3,12 @@
 scripts/make_lits_lowdose.py, verify, delete the raw files, move on.
 
     python scripts/prep_lits.py --order 0 2 4 ... --I0 <calibrated> [--max-used-gb 38]
+    python scripts/prep_lits.py --zip data/lits_raw/liver-tumor-segmentation.zip --order ... --I0 ...
 
+Kaggle's per-file download (-f) answers 404 for this dataset's files in subfolders
+(tested 12 Nov 2026 with kaggle 1.7.4.5, CLI and REST), so the working path is --zip:
+download the whole part-1 archive once (5.2 GB, on the login node) and extract ONE
+patient's two files at a time from it; the archive is never unpacked as a whole.
 Runs inside a cpu_student job (slurm/lits_prep.sbatch). Patients already converted
 (meta.json present) are skipped, so the job can be resubmitted. Stops when the home
 folder exceeds --max-used-gb (quota 50 GB, keep 10 GB free). Logs disk use every
@@ -70,6 +75,20 @@ def download(path_in_dataset, dest_dir):
     return nii
 
 
+def extract_from_zip(zip_path, member, dest_dir):
+    """Extract one member of the archive to dest_dir/<basename>; returns that path."""
+    out = os.path.join(dest_dir, os.path.basename(member))
+    with zipfile.ZipFile(zip_path) as zf, zf.open(member) as src, open(out, "wb") as dst:
+        shutil.copyfileobj(src, dst, 16 * 1024 * 1024)
+    return out
+
+
+def zip_file_map(zip_path):
+    """{basename: member path} of every .nii in the archive."""
+    with zipfile.ZipFile(zip_path) as zf:
+        return {os.path.basename(n): n for n in zf.namelist() if n.endswith(".nii")}
+
+
 def used_gb(path):
     out = subprocess.run(["du", "-s", "--block-size=1M", path], text=True, capture_output=True).stdout
     return int(out.split()[0]) / 1024
@@ -85,11 +104,13 @@ def main():
     ap.add_argument("--margin", type=int, default=5)
     ap.add_argument("--max-used-gb", type=float, default=38.0)
     ap.add_argument("--home", default=os.path.expanduser("~"))
+    ap.add_argument("--zip", help="part-1 archive: extract from it instead of downloading per file")
     args = ap.parse_args()
 
     os.makedirs(args.raw, exist_ok=True)
     os.makedirs(args.out, exist_ok=True)
-    files = kaggle_file_map(os.path.join(args.out, "kaggle_part1_files.json"))
+    files = zip_file_map(args.zip) if args.zip else kaggle_file_map(os.path.join(args.out, "kaggle_part1_files.json"))
+    fetch = (lambda m: extract_from_zip(args.zip, m, args.raw)) if args.zip else (lambda m: download(m, args.raw))
     done, failed = [], []
     for n, k in enumerate(args.order):
         pid = f"lits_{k:03d}"
@@ -107,8 +128,8 @@ def main():
             continue
         t0 = time.time()
         try:
-            vol = download(files[vol_name], args.raw)
-            msk = download(files[msk_name], args.raw)
+            vol = fetch(files[vol_name])
+            msk = fetch(files[msk_name])
             shutil.rmtree(os.path.join(args.out, pid), ignore_errors=True)   # a half-done patient starts clean
             meta = convert_patient(vol, msk, args.out, pid, args.I0, margin=args.margin, workers=args.workers, seed=k)
             # verify: counts match and every file loads

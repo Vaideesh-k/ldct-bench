@@ -1,6 +1,7 @@
 #!/bin/bash
 # Build data/lits (download + convert + simulate, one patient at a time) on the CPU partition.
 #     sbatch slurm/lits_prep.sbatch <I0> <patient numbers in order...>
+# Uses the part-1 archive data/lits_raw/liver-tumor-segmentation.zip (see scripts/prep_lits.py).
 #SBATCH --job-name=lits_prep
 #SBATCH --partition=cpu_student
 #SBATCH --ntasks=1
@@ -18,6 +19,6 @@ conda activate ctmamba
 cd ~/ldct-bench
 echo "host: $(hostname) | date: $(date) | I0 $I0 | order: $*"
 du -sh ~ | tail -1
-python scripts/prep_lits.py --I0 "$I0" --workers 16 --order "$@"
+python scripts/prep_lits.py --zip data/lits_raw/liver-tumor-segmentation.zip --I0 "$I0" --workers 16 --order "$@"
 du -sh ~ | tail -1
 echo "LITS_PREP_DONE $(date)"
