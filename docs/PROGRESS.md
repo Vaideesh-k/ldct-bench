@@ -210,3 +210,10 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
   The quarter-dose LiTS row is recomputed at the end of 36222. The LiTS rows in
   results/summary.csv are replaced by these jobs.
 - nnU-Net 35522 still pending (full-A100 queue, Priority).
+- SUBMITTED 16 Nov: **detect_all = job 36226** (`slurm/detect_all.sbatch`, MIG slice,
+  afterok: 35522 + 36223 + 36224 + 36225). It runs the trained nnU-Net on the locked LiTS
+  test patients as normal dose, quarter dose and each model's denoised output, scores
+  lesion detection with detect_eval.py and writes results/detect_<input>.json and
+  results/detect_summary.csv. prep_nnunet.py gained `--from-kind quarter`;
+  tests/check_nnunet_prep.py (7 checks) added. This is the whole evaluation chain the
+  project is about, fully queued; it needs no further input unless a job fails.

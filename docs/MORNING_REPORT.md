@@ -29,6 +29,7 @@ LiTS test-set rows exist but are being recomputed (see Problems); do not quote t
 | 36222 | LiTS low-dose resimulation with per-patient exposure calibration (CPU) | ~2-3 h |
 | 36223 / 36224 / 36225 | after 36222: predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | minutes / minutes / ~1 h |
 | 35522 | nnU-Net 3d_fullres, 250 epochs, fold 0, then predict + detect_eval on the normal-dose test patients | pending in the full-A100 queue; ~1 day once running |
+| 36226 | after all of the above: nnU-Net on normal dose / quarter dose / CT-Mamba / CTformer / CoreDiff LiTS test outputs -> lesion detection rates (results/detect_summary.csv) | ~1-2 h on a MIG slice |
 
 ## Problems and what I did about them
 - Kaggle serves this dataset only as a whole archive; downloaded on a CPU node, patients
@@ -54,8 +55,7 @@ after the build (re-downloadable in 50 min).
    (commands in the header of slurm/short50.sbatch, ~14 h each, chained on one A100).
 3. Idea 1: submit slurm/finetune.sbatch (control, then lesion; commands in its header)
    once 36222 has finished (it needs the final low-dose LiTS slices).
-4. After nnU-Net (35522) and the LiTS predictions: run nnU-Net on each model's LiTS output
-   (`scripts/prep_nnunet.py --part test --images-only --from-predictions runs/<model>/predictions/lits`,
-   then `nnUNetv2_predict`, then `scripts/detect_eval.py`) - the detection comparison the
-   project is about. I did not script this chain yet because it depends on the trained
-   nnU-Net; it is a 20-line job script if you want me to add it next session.
+4. Nothing for the detection comparison: job 36226 does it automatically after nnU-Net
+   and the LiTS predictions (results/detect_summary.csv on the DGX). If any job in the
+   chain fails, the dependants stay pending with reason "DependencyNeverSatisfied";
+   `scancel` them and resubmit after the fix (commands in each script's header).
