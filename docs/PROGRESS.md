@@ -217,3 +217,9 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
   results/detect_summary.csv. prep_nnunet.py gained `--from-kind quarter`;
   tests/check_nnunet_prep.py (7 checks) added. This is the whole evaluation chain the
   project is about, fully queued; it needs no further input unless a job fails.
+- Job 36222 FAILED after 2 min (0 patients): the `--from-existing` branch of prep_lits.py had
+  not been inserted inside the patient loop (a text replacement missed silently) and the
+  job exited 1 as designed, so the dependants 36223-36226 went "DependencyNeverSatisfied".
+  Fixed with a loop-level test. RESUBMITTED: resim **36228** -> LiTS
+  predict/evaluate ctformer **36229**, corediff **36230**, ct_mamba **36231** -> detect_all
+  **36232** (also after nnU-Net 35522). 36223-36226 cancelled.
