@@ -25,8 +25,13 @@ computed tomography scan protocols", JCAT 2012):
      dp = -ln(N_noisy / N_eff)  (noise only, zero mean).
   4. The noise image is FBP(dp) with a ramp filter (skimage iradon) and is added to
      the original HU image.
-  I0 is calibrated once (scripts/calibrate_lits_noise.py) so that the added noise in
-  uniform liver tissue matches the Mayo quarter-dose minus full-dose noise.
+  I0 (the exposure) is chosen PER PATIENT so that the added noise in the liver matches
+  the Mayo quarter-dose minus full-dose noise (--target-noise, 48.2 HU measured by
+  scripts/calibrate_lits_noise.py). This mimics a scanner's automatic exposure control:
+  with one fixed I0 the noise varied from 32 to 686 HU across LiTS patients (patient
+  size, pixel size), nothing like the 37-62 HU spread of the real Mayo patients.
+  The calibration iterates I0 <- I0 * (std/target)^2 on up to 12 liver slices
+  (electronic noise makes the plain 1/sqrt(I0) law inexact), then converts all slices.
   LIMITATION (documented): parallel-beam geometry, no bow-tie filter, no beam
   hardening, no detector cross-talk; the noise level is matched to Mayo, the fine
   noise texture is only an approximation of a fan-beam scanner's.
@@ -115,7 +120,37 @@ def _one_slice(job):
     return simulate_low_dose(full, spacing, I0=I0, dose=dose, seed=seed)
 
 
-def convert_patient(volume_path, mask_path, out_root, pid, I0, dose=0.25, margin=5, workers=8, seed=0):
+def calibrate_I0(fulls, masks, spacing, target, I0=9e5, dose=0.25, workers=8, seed=0, max_rounds=6, tol=0.03, n_slices=12):
+    """Exposure that gives `target` HU of added noise in this patient's liver (median over
+    up to n_slices liver slices), by iterating I0 <- I0 * (std/target)^2. Returns (I0, history)."""
+    liver_idx = [i for i, m in enumerate(masks) if liver_roi(m).sum() >= 200]
+    if not liver_idx:
+        return I0, []
+    pick = liver_idx[:: max(1, len(liver_idx) // n_slices)][:n_slices]
+    history = []
+    for _ in range(max_rounds):
+        jobs = [(fulls[i], spacing, I0, dose, seed * 100_000 + i) for i in pick]
+        lows = _run(jobs, workers)
+        std = float(np.nanmedian([added_noise_std(l, fulls[i], liver_roi(masks[i])) for l, i in zip(lows, pick)]))
+        history.append({"I0": I0, "added_noise_std_hu": std})
+        if abs(std - target) / target < tol:
+            break
+        I0 = I0 * (std / target) ** 2
+    return history[-1]["I0"], history
+
+
+def _run(jobs, workers):
+    if workers > 1:
+        with Pool(workers) as pool:
+            return pool.map(_one_slice, jobs, chunksize=1)
+    return [_one_slice(j) for j in jobs]
+
+
+def convert_patient(volume_path, mask_path, out_root, pid, I0, dose=0.25, margin=5, workers=8, seed=0,
+                    target_noise=None, quarter_only=False):
+    """Convert one patient. target_noise: calibrate I0 for this patient first (I0 = start value).
+    quarter_only: rewrite only quarter/ and meta.json (full/ and mask/ are left untouched
+    if present, so another job may keep reading them)."""
     vol, zooms = load_canonical(volume_path)
     msk, mz = load_canonical(mask_path, integer=True)
     if vol.shape != msk.shape:
@@ -129,21 +164,21 @@ def convert_patient(volume_path, mask_path, out_root, pid, I0, dose=0.25, margin
 
     fulls = [np.clip(axial(vol, z), HU_MIN, HU_MAX) for z in range(z0, z1 + 1)]
     masks = [axial(msk, z).astype(np.uint8) for z in range(z0, z1 + 1)]
+    history = []
+    if target_noise:
+        I0, history = calibrate_I0(fulls, masks, spacing, target_noise, I0=I0, dose=dose, workers=workers, seed=seed)
     jobs = [(f, spacing, I0, dose, seed * 100_000 + i) for i, f in enumerate(fulls)]
-    if workers > 1:
-        with Pool(workers) as pool:
-            lows = pool.map(_one_slice, jobs, chunksize=1)
-    else:
-        lows = [_one_slice(j) for j in jobs]
+    lows = _run(jobs, workers)
 
     for kind in ("full", "quarter", "mask"):
         os.makedirs(os.path.join(out_root, pid, kind), exist_ok=True)
     noise = []
     for i, (f, l, m) in enumerate(zip(fulls, lows, masks)):
         name = f"{pid}_{i:04d}.npy"
-        np.save(os.path.join(out_root, pid, "full", name), np.rint(f).astype(np.int16))
+        if not quarter_only:
+            np.save(os.path.join(out_root, pid, "full", name), np.rint(f).astype(np.int16))
+            np.save(os.path.join(out_root, pid, "mask", name), m)
         np.save(os.path.join(out_root, pid, "quarter", name), np.rint(np.clip(l, HU_MIN, HU_MAX)).astype(np.int16))
-        np.save(os.path.join(out_root, pid, "mask", name), m)
         noise.append(added_noise_std(l, f, liver_roi(m)))
 
     noise = np.array(noise)
@@ -152,7 +187,8 @@ def convert_patient(volume_path, mask_path, out_root, pid, I0, dose=0.25, margin
         "spacing_mm": {"x": zooms[0], "y": zooms[1], "z": zooms[2]}, "shape_xyz": list(vol.shape),
         "kept_slices": {"first": z0, "last": z1, "count": len(fulls)}, "margin": margin,
         "simulation": {"I0": I0, "dose": dose, "sigma_e": 10.0, "n_angles": 720, "seed": seed,
-                       "geometry": "parallel-beam, skimage radon/iradon, noise insertion"},
+                       "geometry": "parallel-beam, skimage radon/iradon, noise insertion",
+                       "target_noise_hu": target_noise, "calibration": history},
         "liver_added_noise_std_hu": {"median": float(np.nanmedian(noise)) if np.isfinite(noise).any() else None,
                                      "slices_with_liver_roi": int(np.isfinite(noise).sum())},
         "tumour_voxels": int(sum(int((m == LABEL_TUMOUR).sum()) for m in masks)),
@@ -163,19 +199,52 @@ def convert_patient(volume_path, mask_path, out_root, pid, I0, dose=0.25, margin
     return meta
 
 
+def resimulate_patient(out_root, pid, I0, dose=0.25, workers=8, seed=0, target_noise=None):
+    """Regenerate only quarter/ and meta.json of an already converted patient from its own
+    full/ and mask/ slices (no NIfTI, no archive needed)."""
+    import glob
+    folder = os.path.join(out_root, pid)
+    with open(os.path.join(folder, "meta.json")) as f:
+        meta = json.load(f)
+    spacing = float(np.mean([meta["spacing_mm"]["x"], meta["spacing_mm"]["y"]]))
+    files = sorted(glob.glob(os.path.join(folder, "full", "*.npy")))
+    fulls = [np.load(f).astype(np.float64) for f in files]
+    masks = [np.load(f.replace("/full/", "/mask/")) for f in files]
+    history = []
+    if target_noise:
+        I0, history = calibrate_I0(fulls, masks, spacing, target_noise, I0=I0, dose=dose, workers=workers, seed=seed)
+    lows = _run([(f, spacing, I0, dose, seed * 100_000 + i) for i, f in enumerate(fulls)], workers)
+    noise = []
+    for f, l, m, path in zip(fulls, lows, masks, files):
+        np.save(path.replace("/full/", "/quarter/"), np.rint(np.clip(l, HU_MIN, HU_MAX)).astype(np.int16))
+        noise.append(added_noise_std(l, f, liver_roi(m)))
+    noise = np.array(noise)
+    meta["simulation"].update({"I0": I0, "dose": dose, "seed": seed, "target_noise_hu": target_noise, "calibration": history})
+    meta["liver_added_noise_std_hu"] = {"median": float(np.nanmedian(noise)) if np.isfinite(noise).any() else None,
+                                        "slices_with_liver_roi": int(np.isfinite(noise).sum())}
+    tmp = os.path.join(folder, "meta.json.tmp")
+    with open(tmp, "w") as f:
+        json.dump(meta, f, indent=1)
+    os.replace(tmp, os.path.join(folder, "meta.json"))
+    return meta
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--volume", required=True)
     ap.add_argument("--mask", required=True)
     ap.add_argument("--out", default="data/lits")
     ap.add_argument("--id", required=True, help="patient folder name, e.g. lits_000")
-    ap.add_argument("--I0", type=float, required=True, help="incident photons per detector element (calibrated)")
+    ap.add_argument("--I0", type=float, required=True, help="incident photons per detector element (start value with --target-noise)")
+    ap.add_argument("--target-noise", type=float, help="HU: calibrate I0 for this patient to this added liver noise")
+    ap.add_argument("--quarter-only", action="store_true", help="rewrite only quarter/ and meta.json")
     ap.add_argument("--dose", type=float, default=0.25)
     ap.add_argument("--margin", type=int, default=5)
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
-    meta = convert_patient(args.volume, args.mask, args.out, args.id, args.I0, args.dose, args.margin, args.workers, args.seed)
+    meta = convert_patient(args.volume, args.mask, args.out, args.id, args.I0, args.dose, args.margin, args.workers, args.seed,
+                           target_noise=args.target_noise, quarter_only=args.quarter_only)
     k, n = meta["kept_slices"], meta["liver_added_noise_std_hu"]
     print(f"{args.id}: slices {k['first']}-{k['last']} ({k['count']} kept), spacing {meta['spacing_mm']}, "
           f"liver added-noise std {n['median']} HU over {n['slices_with_liver_roi']} slices, "

@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=48000
-#SBATCH --time=1-12:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --output=/dgxa_home/se23uari128/ldct-bench/logs/lits_prep_%j.out
 #SBATCH --error=/dgxa_home/se23uari128/ldct-bench/logs/lits_prep_%j.err
 
@@ -18,6 +18,6 @@ conda activate ctmamba
 cd ~/ldct-bench
 echo "host: $(hostname) | date: $(date)"
 du -sh ~ | tail -1
-bash scripts/lits_pipeline.sh
+QUARTER_ONLY=${1:-0} bash scripts/lits_pipeline.sh   # 1 = redo only the low-dose slices
 du -sh ~ | tail -1
 echo "LITS_PREP_DONE $(date)"

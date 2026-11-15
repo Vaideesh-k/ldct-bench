@@ -8,7 +8,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
 from make_lits_lowdose import (added_noise_std, axial, convert_patient, liver_roi, liver_slice_range,
-                               simulate_low_dose)
+                               resimulate_patient, simulate_low_dose)
 
 failed = []
 
@@ -64,9 +64,9 @@ try:
     v = np.full((64, 64, 12), -1024.0, np.float32)
     v[16:48, 16:48, :] = 0.0
     m = np.zeros((64, 64, 12), np.uint8)
-    m[24:40, 24:40, 4:8] = 1
+    m[20:44, 20:44, 4:8] = 1
     m[30:34, 30:34, 5:7] = 2
-    v[24:40, 24:40, 4:8] = 60.0
+    v[20:44, 20:44, 4:8] = 60.0
     nib.save(nib.Nifti1Image(v, affine), os.path.join(tmp, "volume-7.nii"))
     nib.save(nib.Nifti1Image(m, affine), os.path.join(tmp, "segmentation-7.nii"))
     out = os.path.join(tmp, "lits")
@@ -84,6 +84,19 @@ try:
         saved = json.load(fh)
     check("meta.json: spacing and I0 recorded", saved["spacing_mm"]["z"] == 2.5 and saved["simulation"]["I0"] == 2e5)
     check("meta.json: tumour voxels counted", saved["tumour_voxels"] == 4 * 4 * 2)
+    # per-patient calibration: ask for 30 HU, expect to land within 3 %, rewriting only quarter/
+    full_before = os.path.getmtime(os.path.join(out, "lits_007", "full", kept[0]))
+    meta2 = convert_patient(os.path.join(tmp, "volume-7.nii"), os.path.join(tmp, "segmentation-7.nii"),
+                            out, "lits_007", I0=2e5, margin=2, workers=1, seed=7, target_noise=30.0, quarter_only=True)
+    got = meta2["liver_added_noise_std_hu"]["median"]
+    rounds = meta2["simulation"]["calibration"]
+    check(f"calibrated to 30 HU: got {got:.1f} HU in {len(rounds)} rounds", abs(got - 30) / 30 < 0.08 and 1 <= len(rounds) <= 6)
+    check("calibration history recorded, I0 changed", meta2["simulation"]["I0"] != 2e5 and rounds[-1]["I0"] == meta2["simulation"]["I0"])
+    check("quarter_only left full/ untouched", os.path.getmtime(os.path.join(out, "lits_007", "full", kept[0])) == full_before)
+    meta3 = resimulate_patient(out, "lits_007", I0=2e5, workers=1, seed=7, target_noise=40.0)
+    got3 = meta3["liver_added_noise_std_hu"]["median"]
+    check(f"resimulate from existing slices: calibrated to 40 HU, got {got3:.1f}", abs(got3 - 40) / 40 < 0.08
+          and meta3["kept_slices"]["count"] == 8 and meta3["simulation"]["target_noise_hu"] == 40.0)
 except ImportError:
     print("nibabel missing: skipped the NIfTI conversion checks")
 

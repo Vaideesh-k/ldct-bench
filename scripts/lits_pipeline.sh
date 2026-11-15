@@ -11,33 +11,25 @@ TARGET=$(python -c "import json; print(json.load(open('results/mayo_added_noise.
 TEST="2 4 10 11 22 26 28 29 32 45"
 TRAIN=$(python -c "import json; print(' '.join(str(k) for k in json.load(open('configs/lits_split.json'))['train']))")
 
-if [ ! -f configs/lits_sim.json ]; then
-  echo "== calibration on train patient 0 (target $TARGET HU): iterate I0 <- I0 * (std/target)^2 until within 3 %"
-  python - "$TARGET" "$ZIP" <<'PY'
-import json, os, shutil, subprocess, sys
-target, zip_path = float(sys.argv[1]), sys.argv[2]
-I0, history = 2e5, []
-for it in range(5):
-    shutil.rmtree("data/lits_trial", ignore_errors=True)
-    subprocess.run([sys.executable, "scripts/prep_lits.py", "--zip", zip_path, "--order", "0", "--I0", str(I0),
-                    "--out", "data/lits_trial", "--raw", "data/lits_raw_tmp", "--workers", "16"], check=True)
-    std = json.load(open("data/lits_trial/lits_000/meta.json"))["liver_added_noise_std_hu"]["median"]
-    history.append({"I0": I0, "added_noise_std_hu": std})
-    print(f"calibration round {it + 1}: I0 {I0:.4g} -> {std:.2f} HU (target {target:.2f})", flush=True)
-    if abs(std - target) / target < 0.03:
-        break
-    I0 = I0 * (std / target) ** 2
-out = {"I0": round(history[-1]["I0"], -2), "dose": 0.25, "sigma_e": 10.0, "target_added_noise_std_hu": target,
-       "achieved_added_noise_std_hu": history[-1]["added_noise_std_hu"], "history": history,
-       "calibration_patient": "lits_000 (train patient)",
-       "rule": "I0 <- I0 * (std/target)^2 iterated on the trial patient until within 3 %; fixed for every patient"}
-json.dump(out, open("configs/lits_sim.json", "w"), indent=1)
-print("calibrated:", json.dumps(out), flush=True)
+# Per-patient exposure calibration (AEC-like): every patient gets the I0 that produces
+# TARGET HU of added liver noise. configs/lits_sim.json records the rule.
+python - "$TARGET" <<'PY'
+import json, sys
+json.dump({"mode": "per-patient exposure calibration", "target_added_noise_std_hu": float(sys.argv[1]),
+           "dose": 0.25, "sigma_e": 10.0, "I0_start": 9.167e5,
+           "rule": "for each patient iterate I0 <- I0 * (std/target)^2 on up to 12 liver slices until within 3 %, "
+                   "then simulate all slices; the I0 and its history are in each patient's meta.json",
+           "why": "with one fixed I0 the added liver noise ranged 32-686 HU over the 51 patients (patient and "
+                  "pixel size); real scanners modulate exposure, and the Mayo patients span only 37-62 HU"},
+          open("configs/lits_sim.json", "w"), indent=1)
 PY
-  rm -rf data/lits_trial
+echo "== converting all part-1 patients, per-patient calibration to $TARGET HU (test patients first)"
+if [ "${QUARTER_ONLY:-0}" = "1" ]; then   # patients already converted: only the low-dose slices are redone, no archive needed
+  python scripts/prep_lits.py --from-existing --quarter-only --I0 9.167e5 --target-noise "$TARGET" --workers 16 --order 0 $TEST $TRAIN
+else
+  python scripts/prep_lits.py --zip "$ZIP" --I0 9.167e5 --target-noise "$TARGET" --workers 16 --raw data/lits_raw_tmp --order 0 $TEST $TRAIN
 fi
-I0=$(python -c "import json; print(json.load(open('configs/lits_sim.json'))['I0'])")
-echo "== converting all part-1 patients with I0 = $I0 (test patients first)"
-python scripts/prep_lits.py --zip "$ZIP" --I0 "$I0" --workers 16 --raw data/lits_raw_tmp --order 0 $TEST $TRAIN
-echo "== check: added noise in the first test patients vs target $TARGET HU"
-python scripts/calibrate_lits_noise.py --lits data/lits/lits_002 data/lits/lits_004 data/lits/lits_000 --json results/lits_added_noise.json || true
+echo "== check: added noise vs target $TARGET HU"
+python scripts/calibrate_lits_noise.py --lits data/lits/lits_* --json results/lits_added_noise.json | tail -55 || true
+echo "== quarter-dose baseline row on the LiTS test set"
+python scripts/evaluate.py --baseline --sets lits

@@ -25,7 +25,7 @@ import time
 import zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
-from make_lits_lowdose import convert_patient   # noqa: E402
+from make_lits_lowdose import convert_patient, resimulate_patient   # noqa: E402
 
 DATASET = "andrewmvd/liver-tumor-segmentation"
 
@@ -104,7 +104,10 @@ def used_gb(path):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--order", nargs="+", type=int, required=True, help="patient numbers in processing order")
-    ap.add_argument("--I0", type=float, required=True)
+    ap.add_argument("--I0", type=float, required=True, help="exposure, or its start value with --target-noise")
+    ap.add_argument("--target-noise", type=float, help="HU: per-patient exposure calibration to this added liver noise")
+    ap.add_argument("--quarter-only", action="store_true", help="redo only the low-dose slices of converted patients")
+    ap.add_argument("--from-existing", action="store_true", help="with --quarter-only: use the patient's own full/ and mask/ slices, no archive needed")
     ap.add_argument("--out", default="data/lits")
     ap.add_argument("--raw", default="data/lits_raw_tmp", help="scratch folder for one patient's extracted/downloaded .nii files (NOT the archive's folder)")
     ap.add_argument("--workers", type=int, default=16)
@@ -118,18 +121,23 @@ def main():
         raise SystemExit("--raw must not be the folder that holds the archive")
     os.makedirs(args.raw, exist_ok=True)
     os.makedirs(args.out, exist_ok=True)
-    files = zip_file_map(args.zip) if args.zip else kaggle_file_map(os.path.join(args.out, "kaggle_part1_files.json"))
+    if args.from_existing:
+        files = {}
+    else:
+        files = zip_file_map(args.zip) if args.zip else kaggle_file_map(os.path.join(args.out, "kaggle_part1_files.json"))
     fetch = (lambda m: extract_from_zip(args.zip, m, args.raw)) if args.zip else (lambda m: download(m, args.raw))
     done, failed = [], []
     for n, k in enumerate(args.order):
         pid = f"lits_{k:03d}"
         meta_path = os.path.join(args.out, pid, "meta.json")
         if os.path.exists(meta_path):
-            old_I0 = json.load(open(meta_path))["simulation"]["I0"]
-            if abs(old_I0 - args.I0) <= 1e-6 * args.I0:
-                print(f"{pid}: already converted with this I0, skipping", flush=True)
+            sim = json.load(open(meta_path))["simulation"]
+            same = (abs(sim.get("target_noise_hu") or 0 - (args.target_noise or 0)) < 1e-6 if args.target_noise
+                    else abs(sim["I0"] - args.I0) <= 1e-6 * args.I0)
+            if same:
+                print(f"{pid}: already converted with these settings, skipping", flush=True)
                 continue
-            print(f"{pid}: converted with I0 {old_I0:g}, redoing with {args.I0:g}", flush=True)
+            print(f"{pid}: converted with I0 {sim['I0']:g} (target {sim.get('target_noise_hu')}), redoing", flush=True)
         if args.zip and not os.path.exists(args.zip):
             raise SystemExit(f"archive {args.zip} is missing")
         used = used_gb(args.home)
@@ -145,22 +153,26 @@ def main():
         try:
             vol = fetch(files[vol_name])
             msk = fetch(files[msk_name])
-            shutil.rmtree(os.path.join(args.out, pid), ignore_errors=True)   # a half-done patient starts clean
-            meta = convert_patient(vol, msk, args.out, pid, args.I0, margin=args.margin, workers=args.workers, seed=k)
+            if not args.quarter_only:
+                shutil.rmtree(os.path.join(args.out, pid), ignore_errors=True)   # a half-done patient starts clean
+            meta = convert_patient(vol, msk, args.out, pid, args.I0, margin=args.margin, workers=args.workers, seed=k,
+                                   target_noise=args.target_noise, quarter_only=args.quarter_only)
             # verify: counts match and every file loads
             n_slices = meta["kept_slices"]["count"]
             for kind in ("full", "quarter", "mask"):
                 got = sorted(os.listdir(os.path.join(args.out, pid, kind)))
                 assert len(got) == n_slices, f"{kind}: {len(got)} files, expected {n_slices}"
             ks = meta["kept_slices"]
-            print(f"{pid}: OK {n_slices} slices (z {ks['first']}-{ks['last']}), liver added-noise std "
+            print(f"{pid}: OK {n_slices} slices (z {ks['first']}-{ks['last']}), I0 {meta['simulation']['I0']:.4g} "
+                  f"({len(meta['simulation']['calibration'])} calibration rounds), liver added-noise std "
                   f"{meta['liver_added_noise_std_hu']['median']} HU, tumour voxels {meta['tumour_voxels']}, "
                   f"{time.time() - t0:.0f}s", flush=True)
             done.append(pid)
         except Exception as e:   # noqa: BLE001  (log and continue with the next patient)
             print(f"{pid}: FAILED: {e!r}", flush=True)
             failed.append(pid)
-            shutil.rmtree(os.path.join(args.out, pid), ignore_errors=True)
+            if not args.quarter_only:
+                shutil.rmtree(os.path.join(args.out, pid), ignore_errors=True)
         finally:
             clean_raw(args.raw)
         if (n + 1) % 10 == 0:
