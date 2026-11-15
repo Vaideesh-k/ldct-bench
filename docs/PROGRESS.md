@@ -223,3 +223,6 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
   Fixed with a loop-level test. RESUBMITTED: resim **36228** -> LiTS
   predict/evaluate ctformer **36229**, corediff **36230**, ct_mamba **36231** -> detect_all
   **36232** (also after nnU-Net 35522). 36223-36226 cancelled.
+- 16 Nov, +1h30: 36228 running on dgxb, 26/51 patients resimulated, every one within
+  47.6-48.8 HU of the 48.2 HU target (3-5 calibration rounds, ~4 min per patient,
+  per-patient I0 from 4.5e5 to 1.4e7 photons). ~1.5 h left; 36229-36232 wait on it.
