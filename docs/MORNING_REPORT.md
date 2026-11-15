@@ -14,7 +14,10 @@ cluster had done meanwhile and fixed one problem in the LiTS simulation.
 | CoreDiff (job 35391) | 29.28 | **0.8817** | 14.07 | 0.087 | 150k updates, 13 h 54 min |
 
 Per-slice scores: dgx_results/<model>_scores_mayo_L506.csv. Training logs: dgx_results/*_train_log.csv.
-LiTS test-set rows exist but are being recomputed (see Problems); do not quote them yet.
+LiTS (10 locked test patients, 1,458 liver slices, final per-patient-calibrated low dose):
+quarter-dose input 24.29 dB / 0.8193 / 25.77 HU. The model rows are being recomputed by
+jobs 36229-36231 (the CTformer/CoreDiff LiTS rows still in dgx_results/summary.csv are from
+the old simulation; do not quote them).
 
 ## What finished
 - Steps 1, 2, 4, 6, 7 of your plan, as in the 12 Nov report (sync, both baselines wrapped +
@@ -26,8 +29,8 @@ LiTS test-set rows exist but are being recomputed (see Problems); do not quote t
 ## Running / queued on the DGX (16 Nov)
 | job | what | expected |
 |---|---|---|
-| 36228 | LiTS low-dose resimulation with per-patient exposure calibration (CPU) | ~2-3 h |
-| 36229 / 36230 / 36231 | after 36228: predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | minutes / minutes / ~1 h |
+| 36228 | LiTS low-dose resimulation with per-patient exposure calibration (CPU) | DONE 16 Nov, 2 h 49 min, 51/51 patients |
+| 36229 / 36230 / 36231 | predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | 36229 running; the other two wait for a MIG slot, then ~1 h |
 | 35522 | nnU-Net 3d_fullres, 250 epochs, fold 0, then predict + detect_eval on the normal-dose test patients | pending in the full-A100 queue; ~1 day once running |
 | 36232 | after all of the above: nnU-Net on normal dose / quarter dose / CT-Mamba / CTformer / CoreDiff LiTS test outputs -> lesion detection rates (results/detect_summary.csv) | ~1-2 h on a MIG slice |
 
@@ -37,8 +40,12 @@ LiTS test-set rows exist but are being recomputed (see Problems); do not quote t
   reported success; fixed and tested, re-downloaded, rebuilt (12 Nov evening).
 - The single-exposure calibration gave 32-686 HU of added liver noise across patients
   (median 70) against the 37-62 HU of the real Mayo patients. The simulation now picks
-  the exposure per patient (like a scanner's AEC) to hit 48.2 HU; running as job 36222.
-  Documented limitation stays: parallel-beam geometry, no bow-tie filter.
+  the exposure per patient (like a scanner's AEC) to hit 48.2 HU: job 36228 finished, all
+  51 patients now sit at 45.9-51.9 HU (median 48.5; Mayo scorer, same uniform-tissue ROI)
+  with exposures from 4.5e5 to 1.4e7 photons (configs/lits_sim.json, per-patient values and
+  calibration history in dgx_results/lits_meta/<pid>/meta.json, summary in
+  dgx_results/lits_added_noise.json). Documented limitation stays: parallel-beam geometry,
+  no bow-tie filter.
 - Hybrid variant "small" is 4x CT-Mamba's size (the 8x8 scale has the widest channels);
   docs/hybrid_design.md has the one-line fix if you want a lighter version.
 
@@ -53,8 +60,8 @@ after the build (re-downloadable in 50 min).
 1. Review/merge `autonomous-nov12`.
 2. Idea 2: approve the variants (especially "small"), then submit the four 50-epoch runs
    (commands in the header of slurm/short50.sbatch, ~14 h each, chained on one A100).
-3. Idea 1: submit slurm/finetune.sbatch (control, then lesion; commands in its header)
-   once 36228 has finished (it needs the final low-dose LiTS slices).
+3. Idea 1: submit slurm/finetune.sbatch (control, then lesion; commands in its header).
+   The final low-dose LiTS slices it needs are in place (36228 done).
 4. Nothing for the detection comparison: job 36232 does it automatically after nnU-Net
    and the LiTS predictions (results/detect_summary.csv on the DGX). If any job in the
    chain fails, the dependants stay pending with reason "DependencyNeverSatisfied";

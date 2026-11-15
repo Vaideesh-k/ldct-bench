@@ -226,3 +226,14 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
 - 16 Nov, +1h30: 36228 running on dgxb, 26/51 patients resimulated, every one within
   47.6-48.8 HU of the 48.2 HU target (3-5 calibration rounds, ~4 min per patient,
   per-patient I0 from 4.5e5 to 1.4e7 photons). ~1.5 h left; 36229-36232 wait on it.
+- 16 Nov: **36228 COMPLETED** (2 h 49 min): 51/51 patients resimulated, 0 failed, home 29.8 GB.
+  Per-patient added liver noise now 45.9-51.9 HU, median 48.5 (calibrate_lits_noise.py,
+  Mayo scorer; the in-job liver-mask ROI gave 44.1-49.5). Exposure I0 ranges 4.5e5-1.4e7
+  photons (median 1.66e6), 1-6 calibration rounds each. Test patients: 46.6-51.9 HU.
+  Quarter-dose LiTS baseline recomputed: 24.29 dB / 0.8193 / 25.77 HU on 1,458 slices.
+  Copied back: configs/lits_sim.json, dgx_results/lits_added_noise.json,
+  dgx_results/lits_meta/*/meta.json (51), dgx_results/summary.csv (model LiTS rows in it
+  are still the OLD simulation until 36229-36231 overwrite them).
+  Queue: 36229 ctformer RUNNING on dgxa; 36230/36231 pending (AssocGrpGRES = MIG group
+  limit, they start when a slot frees); 36232 detect_all on dependency; 35522 nnU-Net
+  still Priority-pending in the full-A100 queue.

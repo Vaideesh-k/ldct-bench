@@ -1,27 +1,9 @@
 {
- "I0": 916700.0,
+ "mode": "per-patient exposure calibration",
+ "target_added_noise_std_hu": 48.226206727889014,
  "dose": 0.25,
  "sigma_e": 10.0,
- "target_added_noise_std_hu": 48.226206727889014,
- "achieved_added_noise_std_hu": 47.46289036699958,
- "history": [
-  {
-   "I0": 200000.0,
-   "added_noise_std_hu": 128.23969856603279
-  },
-  {
-   "I0": 1414193.2686884985,
-   "added_noise_std_hu": 37.11966986679299
-  },
-  {
-   "I0": 837820.0877984709,
-   "added_noise_std_hu": 50.44516066360454
-  },
-  {
-   "I0": 916692.2951380172,
-   "added_noise_std_hu": 47.46289036699958
-  }
- ],
- "calibration_patient": "lits_000 (train patient)",
- "rule": "I0 <- I0 * (std/target)^2 iterated on the trial patient until within 3 %; fixed for every patient"
+ "I0_start": 916700.0,
+ "rule": "for each patient iterate I0 <- I0 * (std/target)^2 on up to 12 liver slices until within 3 %, then simulate all slices; the I0 and its history are in each patient's meta.json",
+ "why": "with one fixed I0 the added liver noise ranged 32-686 HU over the 51 patients (patient and pixel size); real scanners modulate exposure, and the Mayo patients span only 37-62 HU"
 }

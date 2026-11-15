@@ -19,15 +19,38 @@
  },
  "margin": 5,
  "simulation": {
-  "I0": 916700.0,
+  "I0": 4101371.7490267563,
   "dose": 0.25,
   "sigma_e": 10.0,
   "n_angles": 720,
   "seed": 31,
-  "geometry": "parallel-beam, skimage radon/iradon, noise insertion"
+  "geometry": "parallel-beam, skimage radon/iradon, noise insertion",
+  "target_noise_hu": 48.226206727889014,
+  "calibration": [
+   {
+    "I0": 916700.0,
+    "added_noise_std_hu": 159.70476650178833
+   },
+   {
+    "I0": 10053025.420186494,
+    "added_noise_std_hu": 28.595241538636166
+   },
+   {
+    "I0": 3534419.6445571985,
+    "added_noise_std_hu": 54.47300252220328
+   },
+   {
+    "I0": 4509356.109514511,
+    "added_noise_std_hu": 45.99285874599572
+   },
+   {
+    "I0": 4101371.7490267563,
+    "added_noise_std_hu": 48.8078669290762
+   }
+  ]
  },
  "liver_added_noise_std_hu": {
-  "median": 151.23835810171542,
+  "median": 48.18415282103985,
   "slices_with_liver_roi": 66
  },
  "tumour_voxels": 6736,
