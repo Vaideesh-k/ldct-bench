@@ -132,12 +132,30 @@ def main():
         meta_path = os.path.join(args.out, pid, "meta.json")
         if os.path.exists(meta_path):
             sim = json.load(open(meta_path))["simulation"]
-            same = (abs(sim.get("target_noise_hu") or 0 - (args.target_noise or 0)) < 1e-6 if args.target_noise
-                    else abs(sim["I0"] - args.I0) <= 1e-6 * args.I0)
+            if args.target_noise:
+                same = abs((sim.get("target_noise_hu") or 0.0) - args.target_noise) < 1e-6
+            else:
+                same = not sim.get("target_noise_hu") and abs(sim["I0"] - args.I0) <= 1e-6 * args.I0
             if same:
                 print(f"{pid}: already converted with these settings, skipping", flush=True)
                 continue
             print(f"{pid}: converted with I0 {sim['I0']:g} (target {sim.get('target_noise_hu')}), redoing", flush=True)
+        if args.from_existing:                        # resimulate from the patient's own slices
+            if not os.path.exists(meta_path):
+                print(f"{pid}: not converted yet, nothing to resimulate", flush=True)
+                failed.append(pid)
+                continue
+            t0 = time.time()
+            try:
+                meta = resimulate_patient(args.out, pid, args.I0, workers=args.workers, seed=k, target_noise=args.target_noise)
+                print(f"{pid}: OK resimulated {meta['kept_slices']['count']} slices, I0 {meta['simulation']['I0']:.4g} "
+                      f"({len(meta['simulation']['calibration'])} rounds), liver added-noise std "
+                      f"{meta['liver_added_noise_std_hu']['median']} HU, {time.time() - t0:.0f}s", flush=True)
+                done.append(pid)
+            except Exception as e:   # noqa: BLE001
+                print(f"{pid}: FAILED: {e!r}", flush=True)
+                failed.append(pid)
+            continue
         if args.zip and not os.path.exists(args.zip):
             raise SystemExit(f"archive {args.zip} is missing")
         used = used_gb(args.home)

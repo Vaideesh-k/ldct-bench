@@ -100,6 +100,17 @@ try:
 except ImportError:
     print("nibabel missing: skipped the NIfTI conversion checks")
 
+# ---- prep_lits --from-existing resimulates converted patients, skips when settings match ----
+import subprocess
+cmd = [sys.executable, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts", "prep_lits.py"),
+       "--from-existing", "--quarter-only", "--order", "7", "9", "--I0", "2e5", "--target-noise", "35", "--out", out,
+       "--workers", "1", "--home", out]
+r = subprocess.run(cmd, capture_output=True, text=True)
+check("prep_lits --from-existing: patient 7 resimulated, patient 9 reported missing, exit 1",
+      "lits_007: OK resimulated 8 slices" in r.stdout and "lits_009: not converted yet" in r.stdout and r.returncode == 1)
+r = subprocess.run(cmd[:-6] + ["--out", out, "--workers", "1", "--home", out], capture_output=True, text=True)
+check("prep_lits --from-existing: same target -> skipped", "lits_007: already converted with these settings" in r.stdout)
+
 # ---- prep_lits cleanup never touches the archive ----
 from prep_lits import clean_raw
 d = tempfile.mkdtemp()
