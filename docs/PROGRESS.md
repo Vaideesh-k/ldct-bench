@@ -173,3 +173,40 @@ new models; defaults for queue/schedule/LiTS/storage/nnU-Net questions (see belo
 - The complete test suite (10 files) passes on the Mac (CPU) and on a DGX compute node
   (job 35433). CT-Mamba per-slice L506 scores regenerated from the existing predictions
   (runs/ct_mamba/scores_mayo_L506.csv, copy in dgx_results/; mean 29.419 dB matches).
+
+## 16 Nov (session resumed after the 12 Nov session was cut off)
+
+What happened on the DGX in between (all from sacct and the logs):
+- **CTformer job 35390 COMPLETED** (12 h 22 min on a full A100, 13 Nov 22:58): best.pth =
+  epoch 1380 (train loss 0.004357; final-epoch loss 0.004422).
+  L506: **PSNR 28.56 dB / SSIM 0.8680 / RMSE 15.28 HU**, 0.112 s/slice.
+- **CoreDiff job 35391 COMPLETED** (13 h 54 min, 14 Nov 12:52): best.pth = EMA of epoch 160
+  (train loss 1.4e-5). L506: **PSNR 29.28 dB / SSIM 0.8817 / RMSE 14.07 HU**, 0.087 s/slice.
+- CT-Mamba stays the best on PSNR/RMSE (29.42 / 13.85); CoreDiff has the best SSIM (0.8817
+  vs 0.8776); CTformer is clearly behind. Per-slice scores and full train logs copied to
+  dgx_results/ (ctformer_*, corediff_*).
+- LiTS build 35521 COMPLETED (2 h 22 min): all **51 patients, 7,274 slices**, 5 patients have
+  no tumour; per-patient meta.json copies in dgx_results/lits_meta/. The iterative
+  calibration ended at I0 = 9.17e5 (47.5 HU on patient 0). Archive deleted (planned; home
+  now 30 GB with the LiTS predictions of two models).
+- Because data/lits existed, both baseline jobs also predicted and scored the LiTS test set
+  (10 locked patients, 1,458 slices): quarter dose 20.63 dB, CTformer 25.69, CoreDiff 26.36.
+  THESE LiTS ROWS ARE PROVISIONAL, see the finding below.
+
+**Finding: one fixed exposure does not give Mayo-like noise across LiTS.** The validation
+over all 51 patients (added liver noise per patient): median 70 HU, IQR 55-139, range
+32-686 HU (lits_028: 647 HU, lits_032: 211 HU). Mayo's real quarter-dose patients span
+37-62 HU. Cause: in the simulation the noise grows with the attenuation path and the pixel
+size (corr. with pixel spacing 0.49) and a fixed I0 has no exposure control; real scanners
+modulate the tube current per patient (AEC). Decision (logged, reversible): calibrate the
+exposure PER PATIENT so that each patient's added liver noise is the Mayo median 48.2 HU
+(iterate I0 on up to 12 liver slices until within 3 %, then simulate all slices; the I0
+and the iteration history go into each patient's meta.json; configs/lits_sim.json now
+records the rule, not a number). Implemented with tests (commit aa1d5dc), and only the
+quarter/ slices are rewritten from each patient's own full/ and mask/ slices, so the
+pending nnU-Net job (normal dose) is unaffected and no archive is needed.
+- SUBMITTED 16 Nov: resimulation **36222** (cpu_student) -> LiTS prediction + evaluation
+  on MIG slices for ctformer **36223**, corediff **36224**, ct_mamba **36225** (afterok).
+  The quarter-dose LiTS row is recomputed at the end of 36222. The LiTS rows in
+  results/summary.csv are replaced by these jobs.
+- nnU-Net 35522 still pending (full-A100 queue, Priority).

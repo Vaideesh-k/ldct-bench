@@ -1,0 +1,35 @@
+{
+ "id": "lits_029",
+ "source_volume": "volume-29.nii",
+ "source_mask": "segmentation-29.nii",
+ "spacing_mm": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.0
+ },
+ "shape_xyz": [
+  512,
+  512,
+  172
+ ],
+ "kept_slices": {
+  "first": 39,
+  "last": 162,
+  "count": 124
+ },
+ "margin": 5,
+ "simulation": {
+  "I0": 916700.0,
+  "dose": 0.25,
+  "sigma_e": 10.0,
+  "n_angles": 720,
+  "seed": 29,
+  "geometry": "parallel-beam, skimage radon/iradon, noise insertion"
+ },
+ "liver_added_noise_std_hu": {
+  "median": 101.40255097284364,
+  "slices_with_liver_roi": 111
+ },
+ "tumour_voxels": 14062,
+ "liver_voxels": 1648024
+}

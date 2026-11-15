@@ -1,0 +1,17 @@
+{
+ "lits_002": {
+  "I0": 916700.0,
+  "added_noise_std_median_hu": 77.66746242491412,
+  "slices": 123
+ },
+ "lits_004": {
+  "I0": 916700.0,
+  "added_noise_std_median_hu": 85.84854546003447,
+  "slices": 217
+ },
+ "lits_000": {
+  "I0": 916700.0,
+  "added_noise_std_median_hu": 47.67411075072249,
+  "slices": 26
+ }
+}

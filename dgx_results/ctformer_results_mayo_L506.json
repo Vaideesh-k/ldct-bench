@@ -1,0 +1,26 @@
+{
+  "model": "ctformer",
+  "test_set": "mayo_L506",
+  "slices": 526,
+  "window_hu": [
+    -160,
+    240
+  ],
+  "mean": {
+    "psnr": 28.56145131053099,
+    "ssim": 0.8680220165758677,
+    "rmse": 15.279184695068638
+  },
+  "std": {
+    "psnr": 1.8102653698029498,
+    "ssim": 0.038002967193399746,
+    "rmse": 3.5543673484928577
+  },
+  "timing": {
+    "slices": 526,
+    "seconds_per_slice": 0.11243916350815977,
+    "device": "NVIDIA A100-SXM4-40GB",
+    "epoch": 1380,
+    "checkpoint": "best.pth"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "model": "corediff",
+  "test_set": "lits",
+  "slices": 1458,
+  "window_hu": [
+    -160,
+    240
+  ],
+  "mean": {
+    "psnr": 26.35819658223479,
+    "ssim": 0.7923288467166241,
+    "rmse": 27.120176553424848
+  },
+  "std": {
+    "psnr": 6.359424205383885,
+    "ssim": 0.13550409595048096,
+    "rmse": 30.22990973566304
+  },
+  "timing": {
+    "slices": 1458,
+    "seconds_per_slice": 0.08659842840089689,
+    "device": "NVIDIA A100-SXM4-40GB",
+    "epoch": 160,
+    "checkpoint": "best.pth"
+  }
+}
