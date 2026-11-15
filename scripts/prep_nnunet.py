@@ -48,6 +48,7 @@ def main():
     ap.add_argument("--name", default="LiTSLiver")
     ap.add_argument("--images-only", action="store_true", help="write only images (inference inputs), flat in --out")
     ap.add_argument("--from-predictions", help="take the images from a predictions folder (<pid>/<name>.npy) instead of data/lits/<pid>/full")
+    ap.add_argument("--from-kind", default=None, help="with --from-predictions pointing at data/lits: the sub-folder to read, e.g. quarter")
     args = ap.parse_args()
 
     with open(args.split) as f:
@@ -74,7 +75,7 @@ def main():
             sp = json.load(f)["spacing_mm"]
         spacing = (sp["z"], sp["y"], sp["x"])
         if args.from_predictions:
-            files = sorted(glob.glob(os.path.join(args.from_predictions, pid, "*.npy")))
+            files = sorted(glob.glob(os.path.join(args.from_predictions, pid, args.from_kind or "", "*.npy")))
             if not files:
                 print(f"{pid}: no predictions, skipped")
                 continue
