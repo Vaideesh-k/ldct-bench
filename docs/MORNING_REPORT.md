@@ -14,10 +14,19 @@ cluster had done meanwhile and fixed one problem in the LiTS simulation.
 | CoreDiff (job 35391) | 29.28 | **0.8817** | 14.07 | 0.087 | 150k updates, 13 h 54 min |
 
 Per-slice scores: dgx_results/<model>_scores_mayo_L506.csv. Training logs: dgx_results/*_train_log.csv.
-LiTS (10 locked test patients, 1,458 liver slices, final per-patient-calibrated low dose):
-quarter-dose input 24.29 dB / 0.8193 / 25.77 HU. The model rows are being recomputed by
-jobs 36229-36231 (the CTformer/CoreDiff LiTS rows still in dgx_results/summary.csv are from
-the old simulation; do not quote them).
+## LiTS results (10 locked test patients, 1,458 liver slices, simulated quarter dose, same scorer)
+
+| model | PSNR dB | SSIM | RMSE HU | s/slice (MIG 3g.20gb) |
+|---|---|---|---|---|
+| quarter dose (input) | 24.29 | 0.8193 | 25.77 | |
+| **CT-Mamba** | **29.92** | **0.8608** | **13.53** | 2.320 |
+| CTformer | 28.51 | 0.8354 | 15.71 | 0.253 |
+| CoreDiff | 29.43 | 0.8560 | 14.08 | 0.181 |
+
+Same ranking as on Mayo L506; none of the models saw a LiTS slice during training. Timing is on a
+MIG slice, so it is not comparable with the A100 column above. Per-slice scores:
+dgx_results/<model>_scores_lits.csv. Low dose = parallel-beam Poisson + electronic noise at
+25 % exposure, exposure calibrated per patient to the Mayo quarter-dose liver noise (48.2 HU).
 
 ## What finished
 - Steps 1, 2, 4, 6, 7 of your plan, as in the 12 Nov report (sync, both baselines wrapped +
@@ -30,7 +39,7 @@ the old simulation; do not quote them).
 | job | what | expected |
 |---|---|---|
 | 36228 | LiTS low-dose resimulation with per-patient exposure calibration (CPU) | DONE 16 Nov, 2 h 49 min, 51/51 patients |
-| 36229 / 36230 / 36231 | predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | 36229 running; the other two wait for a MIG slot, then ~1 h |
+| 36229 / 36230 / 36231 | predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | DONE 16 Nov (8 min / 6 min / 58 min), table above |
 | 35522 | nnU-Net 3d_fullres, 250 epochs, fold 0, then predict + detect_eval on the normal-dose test patients | pending in the full-A100 queue; ~1 day once running |
 | 36232 | after all of the above: nnU-Net on normal dose / quarter dose / CT-Mamba / CTformer / CoreDiff LiTS test outputs -> lesion detection rates (results/detect_summary.csv) | ~1-2 h on a MIG slice |
 

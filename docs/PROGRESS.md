@@ -237,3 +237,9 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
   Queue: 36229 ctformer RUNNING on dgxa; 36230/36231 pending (AssocGrpGRES = MIG group
   limit, they start when a slot frees); 36232 detect_all on dependency; 35522 nnU-Net
   still Priority-pending in the full-A100 queue.
+- 16 Nov: **36229/36230/36231 COMPLETED** (7 min 55 s / 6 min 21 s / 58 min 13 s, no errors).
+  LiTS locked test set, 1,458 slices: CTformer 28.51 dB / 0.8354 / 15.71 HU; CoreDiff
+  29.43 / 0.8560 / 14.08; CT-Mamba 29.92 / 0.8608 / 13.53; quarter dose 24.29 / 0.8193 /
+  25.77. Same ranking as Mayo L506. Copied back dgx_results/summary.csv (final) and
+  dgx_results/<model>_scores_lits.csv (per slice). Home 32 GB.
+  Remaining queue: nnU-Net 35522 (Priority, full-A100 queue) -> detect_all 36232.
