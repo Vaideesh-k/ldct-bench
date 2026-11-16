@@ -40,7 +40,7 @@ dgx_results/<model>_scores_lits.csv. Low dose = parallel-beam Poisson + electron
 |---|---|---|
 | 36228 | LiTS low-dose resimulation with per-patient exposure calibration (CPU) | DONE 16 Nov, 2 h 49 min, 51/51 patients |
 | 36229 / 36230 / 36231 | predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | DONE 16 Nov (8 min / 6 min / 58 min), table above |
-| 35522 | nnU-Net 3d_fullres, 250 epochs, fold 0, then predict + detect_eval on the normal-dose test patients | pending in the full-A100 queue; ~1 day once running |
+| 35522 | nnU-Net 3d_fullres, 250 epochs, fold 0, then predict + detect_eval on the normal-dose test patients | pending in the full-A100 queue, SLURM's estimated start 20 Nov 10:36 (five A100 jobs ahead, one 5 days old); ~1 day once running |
 | 36232 | after all of the above: nnU-Net on normal dose / quarter dose / CT-Mamba / CTformer / CoreDiff LiTS test outputs -> lesion detection rates (results/detect_summary.csv) | ~1-2 h on a MIG slice |
 
 ## Problems and what I did about them

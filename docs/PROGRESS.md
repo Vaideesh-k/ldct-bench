@@ -243,3 +243,6 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
   25.77. Same ranking as Mayo L506. Copied back dgx_results/summary.csv (final) and
   dgx_results/<model>_scores_lits.csv (per slice). Home 32 GB.
   Remaining queue: nnU-Net 35522 (Priority, full-A100 queue) -> detect_all 36232.
+- 16 Nov, evening: nnU-Net 35522 still Priority-pending; `squeue --start` estimates
+  2026-11-20 10:36. Five full-A100 jobs from other users are running (longest 5 d 5 h).
+  Nothing in the plan depends on it except detect_all 36232, so the chain just waits.
