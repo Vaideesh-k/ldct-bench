@@ -23,41 +23,52 @@ export nnUNet_preprocessed=$HOME/ldct-bench/data/nnunet/preprocessed
 export nnUNet_results=$HOME/ldct-bench/runs/nnunet
 export nnUNet_n_proc_DA=4 OMP_NUM_THREADS=4
 TRAINER=${TRAINER:-nnUNetTrainer_250epochs}
+# Extended test set (final-week step 6): LITS=data/lits_ext SPLIT=configs/lits_ext_split.json TAG=ext_
+# PRED_ROOT=scratch_ext  (model predictions in $PRED_ROOT/<model>/lits_ext, deleted after scoring)
+LITS=${LITS:-data/lits}
+SPLIT=${SPLIT:-configs/lits_split.json}
+TAG=${TAG:-}
+PRED_ROOT=${PRED_ROOT:-}
 CONFIG=${CONFIG:-3d_fullres}
 echo "host: $(hostname) | date: $(date) | inputs: full quarter $MODELS"
 du -sh ~ | tail -1
 
 run_one() {   # name, extra args for prep_nnunet.py
   local name=$1; shift
-  local img=data/nnunet/test_$name
-  local out=runs/nnunet/pred_test_$name
-  if [ ! -f "results/detect_$name.json" ]; then
+  local img=data/nnunet/test_$TAG$name
+  local out=runs/nnunet/pred_test_$TAG$name
+  if [ ! -f "results/detect_$TAG$name.json" ]; then
     rm -rf "$img" "$out"
-    python scripts/prep_nnunet.py --lits data/lits --split configs/lits_split.json --part test --images-only --out "$img" "$@"
+    python scripts/prep_nnunet.py --lits "$LITS" --split "$SPLIT" --part test --images-only --out "$img" "$@"
     nnUNetv2_predict -i "$img" -o "$out" -d 501 -c "$CONFIG" -f 0 -tr "$TRAINER" -npp 4 -nps 4
-    python scripts/detect_eval.py --lits data/lits --pred-root "$out" --out "results/detect_$name.json"
+    python scripts/detect_eval.py --lits "$LITS" --pred-root "$out" --out "results/detect_$TAG$name.json"
     rm -rf "$img"            # the NIfTI copies are not needed afterwards
   fi
-  echo "detect_$name done"
+  echo "detect_$TAG$name done"
 }
 
 run_one full
-run_one quarter --from-predictions data/lits --from-kind quarter
+run_one quarter --from-predictions "$LITS" --from-kind quarter
 for m in $MODELS; do
-  if [ -d "runs/$m/predictions/lits" ]; then
-    run_one "$m" --from-predictions "runs/$m/predictions/lits"
+  if [ -n "$PRED_ROOT" ]; then pd="$PRED_ROOT/$m/lits_ext"; else pd="runs/$m/predictions/lits"; fi
+  if [ -d "$pd" ]; then
+    run_one "$m" --from-predictions "$pd"
   else
-    echo "$m: no LiTS predictions in runs/$m/predictions/lits, skipped"
+    echo "$m: no LiTS predictions in $pd, skipped"
   fi
 done
 
-python - <<'PY'
+TAG="$TAG" python - <<'PY'
 import csv, glob, json, os
+tag = os.environ["TAG"]
 rows = []
-for f in sorted(glob.glob("results/detect_*.json")):
+for f in sorted(glob.glob(f"results/detect_{tag}*.json")):
+    name = os.path.basename(f)[7 + len(tag):-5]
+    if not tag and name.startswith("ext_"):
+        continue
     s = json.load(open(f))["summary"]
-    rows.append({"input": os.path.basename(f)[7:-5], **{k: (round(v, 4) if isinstance(v, float) else v) for k, v in s.items()}})
-with open("results/detect_summary.csv", "w", newline="") as fh:
+    rows.append({"input": name, **{k: (round(v, 4) if isinstance(v, float) else v) for k, v in s.items()}})
+with open(f"results/detect_{tag}summary.csv", "w", newline="") as fh:
     w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
 for r in rows:
     print(r)
