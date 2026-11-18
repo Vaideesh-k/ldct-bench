@@ -246,3 +246,14 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
 - 16 Nov, evening: nnU-Net 35522 still Priority-pending; `squeue --start` estimates
   2026-11-20 10:36. Five full-A100 jobs from other users are running (longest 5 d 5 h).
   Nothing in the plan depends on it except detect_all 36232, so the chain just waits.
+- 17 Nov: **nnU-Net 35522 COMPLETED** (started 16:10, 4 h 11 min, all 250 epochs, 32 train /
+  9 validation cases). Final epoch: train loss -0.755, val loss -0.674, pseudo Dice liver
+  0.965 / tumour 0.681, ~50 s per epoch. Its predictions on the locked test patients
+  (normal dose) are in runs/nnunet/pred_test_full.
+- **detect_all 36232 FAILED** after 7 min, and the scoring step inside 35522 hit the same
+  error: detect_eval.py read nnU-Net's NIfTI predictions as (x, y, z) but the ground truth
+  slice folders as (z, y, x) ("prediction (512, 512, 149) and ground truth (149, 512, 512)
+  differ in shape"). Fixed: load_volume now transposes NIfTI back to (z, y, x), matching
+  prep_nnunet.save_nifti. New round-trip test in tests/check_detect.py; detection and
+  nnU-Net prep tests pass. Fix copied to the DGX. RESUBMITTED as **detect_all 38156**.
+  Home 39 GB (each detection pass adds ~0.5 GB temporarily and deletes it).
