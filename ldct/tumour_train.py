@@ -78,10 +78,10 @@ class MixedPatches(Dataset):
         if tumour_share > 0 and not self.tumour_slices:
             raise ValueError("tumour_share > 0 but no LiTS training slice has a tumour")
         if stage_a:
-            for p in (self.mayo[0], self.lits[0], self.mayo[-1], self.lits[-1]):
-                if not os.path.exists(stage_a_path(p[0])):
-                    raise FileNotFoundError(f"Stage-A slice missing: {stage_a_path(p[0])} "
-                                            f"(run scripts/precompute_stage_a.py)")
+            missing = [stage_a_path(p[0]) for p in self.mayo + self.lits if not os.path.exists(stage_a_path(p[0]))]
+            if missing:
+                raise FileNotFoundError(f"{len(missing)} Stage-A slices missing, e.g. {missing[0]} "
+                                        f"(run scripts/precompute_stage_a.py)")
 
     def __len__(self):
         return self.n_items

@@ -21,3 +21,4 @@ kaggle.json
 # Claude Code personal settings
 .claude/settings.local.json
 dgx_results/*.err
+*.out

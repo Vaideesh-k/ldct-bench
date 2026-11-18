@@ -25,6 +25,7 @@ import time
 import zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_lits_lowdose import convert_patient, resimulate_patient   # noqa: E402
 
 DATASET = "andrewmvd/liver-tumor-segmentation"
@@ -115,17 +116,46 @@ def main():
     ap.add_argument("--max-used-gb", type=float, default=38.0)
     ap.add_argument("--home", default=os.path.expanduser("~"))
     ap.add_argument("--zip", help="part-1 archive: extract from it instead of downloading per file")
+    ap.add_argument("--remote", action="store_true",
+                    help="read each patient's two files straight from the remote Kaggle archives "
+                         "(scripts/remote_zip.py, no archive stored): volumes 0-50 and all masks from "
+                         "part 1, volumes 51-130 from part 2")
     args = ap.parse_args()
 
     if args.zip and os.path.abspath(os.path.dirname(args.zip)) == os.path.abspath(args.raw):
         raise SystemExit("--raw must not be the folder that holds the archive")
     os.makedirs(args.raw, exist_ok=True)
     os.makedirs(args.out, exist_ok=True)
-    if args.from_existing:
+    if args.remote:
+        from remote_zip import extract, open_archive
+        arch = {}
+
+        def remote_member(name):
+            k = int(name.split("-")[1].split(".")[0])
+            ds = DATASET + "-part-2" if name.startswith("volume") and k >= 51 else DATASET
+            for attempt in range(3):
+                try:
+                    if ds not in arch:
+                        zf, _ = open_archive(ds)
+                        arch[ds] = (zf, {os.path.basename(n): n for n in zf.namelist()})
+                    zf, members = arch[ds]
+                    return extract(zf, members[name], args.raw)
+                except KeyError:
+                    raise
+                except Exception as e:   # noqa: BLE001  (expired URL, network): reopen and retry
+                    print(f"remote read of {name} failed ({e!r}), attempt {attempt + 1}", flush=True)
+                    arch.pop(ds, None)
+                    time.sleep(20 * (attempt + 1))
+            raise RuntimeError(f"could not read {name} from {ds}")
+        files = {f"{kind}-{k}.nii": f"{kind}-{k}.nii" for k in args.order for kind in ("volume", "segmentation")}
+    elif args.from_existing:
         files = {}
     else:
         files = zip_file_map(args.zip) if args.zip else kaggle_file_map(os.path.join(args.out, "kaggle_part1_files.json"))
-    fetch = (lambda m: extract_from_zip(args.zip, m, args.raw)) if args.zip else (lambda m: download(m, args.raw))
+    if args.remote:
+        fetch = remote_member
+    else:
+        fetch = (lambda m: extract_from_zip(args.zip, m, args.raw)) if args.zip else (lambda m: download(m, args.raw))
     done, failed = [], []
     for n, k in enumerate(args.order):
         pid = f"lits_{k:03d}"
