@@ -1,93 +1,33 @@
-# Morning report (updated 16 Nov 2026)
+# Morning report — final week, night of 18/19 Nov 2026
 
-Branch **`autonomous-nov12`** (pushed; please review and merge). Full log: docs/PROGRESS.md.
-The 12 Nov session was cut off around 14:30; on 16 Nov I resumed, collected what the
-cluster had done meanwhile and fixed one problem in the LiTS simulation.
+Branch **`final-week`** (from `autonomous-nov12`, pushed after every step). Full log: docs/PROGRESS.md.
 
-## Headline results (Mayo L506, 526 slices, window -160..240 HU, same scorer for all)
+## Done tonight
+| step | status |
+|---|---|
+| 1 success criteria | **DONE**, committed before any result (docs/success_criteria.md, 4415a52) |
+| 3 refiner code + tests | **DONE**: `ct_mamba_refiner` (2D U-Net 32/64/128/256, zero-init residual on CT-Mamba, 2.14 M parameters), shared sampler/loss, 26 checks pass (Mac + DGX) |
+| 4 control | **RUNNING**, job 39377 on a 4g.20gb MIG slice, 30,000 iterations at ~1.35 s → ~11 h |
+| 2 precompute | written, **queued** (39379); needs ~5 GB of disk, see "Blocker" |
+| 3 refiner training | **queued** (39380, after the precompute) |
+| 5 first evaluation | jobs queued (39378 control, 39381 refiner): L506 + LiTS images, nnU-Net detection; then `scripts/final_stats.py` (bootstrap CIs, paired tests, criteria verdict) |
+| 6 extended test set | mask scan of patients 51-130 **running/done** (39373); selection rule committed before conversion (scripts/make_lits_ext_split.py); conversion + evaluation jobs written |
+| 7 report material | figure + training-curve script written (scripts/make_figures.py); tables come from final_stats.py |
 
-| model | PSNR dB | SSIM | RMSE HU | s/slice (A100) | training |
-|---|---|---|---|---|---|
-| quarter dose (input) | 24.47 | 0.8382 | 24.64 | | |
-| **CT-Mamba** (job 27804) | **29.42** | 0.8776 | **13.85** | 1.058 | 250 epochs, 2 d 22 h |
-| CTformer (job 35390) | 28.56 | 0.8680 | 15.28 | 0.112 | 530k updates, 12 h 22 min |
-| CoreDiff (job 35391) | 29.28 | **0.8817** | 14.07 | 0.087 | 150k updates, 13 h 54 min |
+## Two things that threaten the deadline
+1. **Only ONE GPU job at a time on this account** (any MIG size; association limit gres/gpu=1).
+   Refiner and control cannot run in parallel, so everything GPU runs in one chain:
+   control (~11 h) → control eval (~1.5 h) → precompute (~5 h) → refiner (~2 h) → refiner eval
+   → extended-set eval (~5 h). First evaluation expected about 20 Nov morning if the 4g slice
+   keeps being free between jobs. Full A100s were all busy (39 jobs pending).
+2. **Disk.** Home is at 39 of 50 GB; the keep-10-GB-free rule leaves ~1 GB, and the next jobs need
+   ~5 GB (precompute) + ~2 GB (each new model's test predictions) + ~3 GB (extended set). Every
+   job checks the disk first and stops cleanly instead of breaking the rule.
 
-Per-slice scores: dgx_results/<model>_scores_mayo_L506.csv. Training logs: dgx_results/*_train_log.csv.
-## LiTS results (10 locked test patients, 1,458 liver slices, simulated quarter dose, same scorer)
-
-| model | PSNR dB | SSIM | RMSE HU | s/slice (MIG 3g.20gb) |
-|---|---|---|---|---|
-| quarter dose (input) | 24.29 | 0.8193 | 25.77 | |
-| **CT-Mamba** | **29.92** | **0.8608** | **13.53** | 2.320 |
-| CTformer | 28.51 | 0.8354 | 15.71 | 0.253 |
-| CoreDiff | 29.43 | 0.8560 | 14.08 | 0.181 |
-
-Same ranking as on Mayo L506; none of the models saw a LiTS slice during training. Timing is on a
-MIG slice, so it is not comparable with the A100 column above. Per-slice scores:
-dgx_results/<model>_scores_lits.csv. Low dose = parallel-beam Poisson + electronic noise at
-25 % exposure, exposure calibrated per patient to the Mayo quarter-dose liver noise (48.2 HU).
-
-## What finished
-- Steps 1, 2, 4, 6, 7 of your plan, as in the 12 Nov report (sync, both baselines wrapped +
-  trained + scored, detection metrics, hybrid code/tests/measurements, lesion loss code/tests).
-- Step 3: locked split, simulator, Mayo noise target (48.2 HU), all 51 part-1 patients
-  converted (7,274 liver slices with masks, 5 patients without tumour).
-- Step 5: nnU-Net v2 installed; dataset + training job written and queued (35522).
-
-## Detection results (10 locked LiTS test patients, 34 tumours, 9 under 10 mm, same nnU-Net)
-
-| input | detected | small detected | FP / patient | per-tumour Dice |
-|---|---|---|---|---|
-| normal dose | 27/34 | 5/9 | 0.6 | 0.582 |
-| quarter dose | 28/34 | 5/9 | 0.5 | 0.565 |
-| CT-Mamba | 27/34 | 5/9 | 0.3 | 0.543 |
-| CoreDiff | 28/34 | 5/9 | 0.5 | 0.584 |
-| CTformer | 28/34 | 5/9 | 0.5 | 0.585 |
-
-Detection counts do not separate the inputs at quarter dose (the same small tumours are missed
-everywhere). Per-tumour Dice does: quarter dose is lower than normal dose (paired p = 0.018);
-CoreDiff and CTformer recover it; CT-Mamba does not (lowest, p = 0.16). Details:
-dgx_results/detect_paired.json, scripts/detect_compare.py. Full write-up for the professor:
-docs/report/LDCT_Project_Report.pdf.
-
-## Running / queued on the DGX (16 Nov)
-| job | what | expected |
-|---|---|---|
-| 36228 | LiTS low-dose resimulation with per-patient exposure calibration (CPU) | DONE 16 Nov, 2 h 49 min, 51/51 patients |
-| 36229 / 36230 / 36231 | predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | DONE 16 Nov (8 min / 6 min / 58 min), table above |
-| 35522 | nnU-Net 3d_fullres, 250 epochs, fold 0 | DONE 17 Nov, 4 h 11 min; validation pseudo Dice liver 0.965, tumour 0.681 |
-| 38156 | nnU-Net on normal dose / quarter dose / each model's LiTS output -> lesion detection | DONE 18 Nov (40 min); see Detection results |
-
-## Problems and what I did about them
-- Kaggle serves this dataset only as a whole archive; downloaded on a CPU node, patients
-  extracted one at a time. My first pipeline run deleted the archive after patient 0 and
-  reported success; fixed and tested, re-downloaded, rebuilt (12 Nov evening).
-- The single-exposure calibration gave 32-686 HU of added liver noise across patients
-  (median 70) against the 37-62 HU of the real Mayo patients. The simulation now picks
-  the exposure per patient (like a scanner's AEC) to hit 48.2 HU: job 36228 finished, all
-  51 patients now sit at 45.9-51.9 HU (median 48.5; Mayo scorer, same uniform-tissue ROI)
-  with exposures from 4.5e5 to 1.4e7 photons (configs/lits_sim.json, per-patient values and
-  calibration history in dgx_results/lits_meta/<pid>/meta.json, summary in
-  dgx_results/lits_added_noise.json). Documented limitation stays: parallel-beam geometry,
-  no bow-tie filter.
-- Hybrid variant "small" is 4x CT-Mamba's size (the 8x8 scale has the widest channels);
-  docs/hybrid_design.md has the one-line fix if you want a lighter version.
-
-## Decisions I made on my own (all logged in PROGRESS.md)
-Official baseline schedules run in full with the shared cosine schedule and best.pth rule;
-CoreDiff keeps edge slices; calibration on a train patient; per-patient exposure
-calibration for LiTS; hybrid gate init 0.5; Idea-1 extra L1 scaled x100 for CT-Mamba;
-nnU-Net 250-epoch trainer in a venv; LiTS test set = locked split only; LiTS archive deleted
-after the build (re-downloadable in 50 min).
-
-## What I need from you
-1. Review/merge `autonomous-nov12`.
-2. Idea 2: approve the variants (especially "small"), then submit the four 50-epoch runs
-   (commands in the header of slurm/short50.sbatch, ~14 h each, chained on one A100).
-3. Idea 1: submit slurm/finetune.sbatch (control, then lesion; commands in its header).
-   The final low-dose LiTS slices it needs are in place (36228 done).
-4. Nothing for the detection comparison: job 36232 does it automatically after nnU-Net
-   and the LiTS predictions (results/detect_summary.csv on the DGX). If any job in the
-   chain fails, the dependants stay pending with reason "DependencyNeverSatisfied";
-   `scancel` them and resubmit after the fix (commands in each script's header).
+## What I need from you (one line answers are enough)
+- **OK to delete these on the DGX** once the laptop copy has them (I compare sizes first):
+  `data/nnunet/raw`, `data/nnunet/preprocessed` (both rebuildable from data/lits),
+  `runs/ctformer/predictions/lits`, `runs/corediff/predictions/lits` (detection already scored),
+  `runs/ct_mamba/latest.pth` (resume file of a finished run). That frees ~8 GB. My session's
+  safety check refused the delete without your explicit OK. Reply "ok delete" and I do it.
+- Keep the laptop copy running until it finishes (it resumes on its own).
