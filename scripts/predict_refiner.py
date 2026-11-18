@@ -35,6 +35,8 @@ def main():
     ap.add_argument("--checkpoint", default="best.pth")
     ap.add_argument("--stage-a-run", default="ct_mamba")
     ap.add_argument("--live-check", type=int, default=0)
+    ap.add_argument("--pred-root", help="write to <pred-root>/<set> instead of runs/<run>/predictions/<set>")
+    ap.add_argument("--stage-a-root", help="read Stage A from <stage-a-root>/<set> instead of runs/<stage-a-run>/predictions/<set>")
     ap.add_argument("--ct-mamba-checkpoint", default="runs/ct_mamba/best_from11.pth")
     args = ap.parse_args()
     cfg = load_config("ct_mamba")
@@ -47,8 +49,8 @@ def main():
     mamba = None
     for set_name in args.sets:
         pairs = test_set_pairs(cfg["data"]["test_sets"][set_name])
-        a_dir = resolve(os.path.join("runs", args.stage_a_run, "predictions", set_name))
-        out_dir = resolve(os.path.join("runs", args.run, "predictions", set_name))
+        a_dir = os.path.join(resolve(args.stage_a_root), set_name) if args.stage_a_root else resolve(os.path.join("runs", args.stage_a_run, "predictions", set_name))
+        out_dir = os.path.join(resolve(args.pred_root), set_name) if args.pred_root else resolve(os.path.join("runs", args.run, "predictions", set_name))
         if args.live_check:
             if mamba is None:
                 mk = torch.load(resolve(args.ct_mamba_checkpoint), map_location=device)

@@ -36,6 +36,8 @@ def parse_args():
     ap.add_argument("--sets", nargs="+", help="test sets from the config (default: all whose folder exists)")
     ap.add_argument("--config", nargs="+", help="extra yaml file(s) merged on top of the configs, in order")
     ap.add_argument("--run", help="run folder under runs/ and row name in summary.csv (default: the model name)")
+    ap.add_argument("--pred-root", help="read predictions from <pred-root>/<set> instead of runs/<run>/predictions/<set> "
+                                        "(temporary predictions of the extended test set live outside runs/)")
     return ap.parse_args()
 
 
@@ -94,7 +96,7 @@ def main():
     os.makedirs(run_dir, exist_ok=True)
 
     for set_name in sets:
-        pred_dir = None if args.baseline else os.path.join(run_dir, "predictions", set_name)
+        pred_dir = None if args.baseline else os.path.join(resolve(args.pred_root) if args.pred_root else os.path.join(run_dir, "predictions"), set_name)
         scores = score_set(cfg, set_name, pred_dir)
 
         timing = None

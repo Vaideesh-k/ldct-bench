@@ -33,6 +33,7 @@ def parse_args():
     ap.add_argument("--checkpoint", default="best.pth", help="file in runs/<model>/ (default best.pth)")
     ap.add_argument("--config", nargs="+", help="extra yaml file(s) merged on top of the configs, in order")
     ap.add_argument("--run", help="run folder under runs/ (default: the model name)")
+    ap.add_argument("--pred-root", help="write to <pred-root>/<set> instead of runs/<run>/predictions/<set>")
     args = ap.parse_args()
     args.run = args.run or args.model
     return args
@@ -83,7 +84,7 @@ def main():
     print(f"Model {args.model} (run {args.run}), {args.checkpoint} (epoch {epoch}), device {device_name(device)}")
 
     for set_name in sets:
-        out_dir = os.path.join(run_dir, "predictions", set_name)
+        out_dir = os.path.join(resolve(args.pred_root) if args.pred_root else os.path.join(run_dir, "predictions"), set_name)
         seconds = predict_set(model, cfg, set_name, out_dir, device)
 
         # the first slice includes one-off GPU start-up costs, so it is left out

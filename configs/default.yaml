@@ -31,6 +31,12 @@ data:
         split: configs/lits_split.json
         part: test
         prefix: lits_
+    lits_ext:               # final-week step 6: NEW LiTS patients (part 2), chosen from their masks only
+      root: data/lits_ext
+      patients:
+        split: configs/lits_ext_split.json
+        part: test
+        prefix: lits_
 
 train:
   epochs: 250               # number of full passes over the training data
