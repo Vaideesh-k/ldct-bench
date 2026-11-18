@@ -319,3 +319,16 @@ p < 0.05 AND bootstrap 95% CI excluding 0; hybrid 50-epoch runs dropped (out of 
   CT-Mamba predictions (runs/ct_mamba/predictions/{mayo_L506,lits}) are valid Stage-A inputs
   for testing the refiner.
 - **Step 4 SUBMITTED**: control = job **39377** (a100_4g.20gb).
+- Control 39377: first window 1,000 iterations in 1,306 s -> 30,000 in ~10.9 h (ends ~11:20
+  19 Nov); 31% of LiTS patches contain tumour.
+- **Step 6 mask scan 39373 DONE** (31 min): patients 51-130, 626 tumours (330 < 10 mm), 72
+  patients with tumour, 13,199 liver slices (results/lits_ext_scan.json).
+- **Extended test split COMMITTED before any conversion or scoring** (configs/lits_ext_split.json):
+  10 new patients 51 58 63 71 79 88 92 112 118 120 with 72 tumours (49 < 10 mm), 1,156 slices.
+  Extended test set = existing 10 + these = 20 patients, 106 tumours, 58 < 10 mm.
+  Rule revision (logged, before any conversion/scoring): the first rule (96ae71f, no tumour cap)
+  picked ONE patient, lits_117 with 75 tumours, which alone reached 100; a set dominated by one
+  patient makes per-tumour statistics and FP/patient meaningless, so patients with > 10 tumours
+  are now excluded (7 such patients, incl. 117 and 108 with 66).
+- Conversion (slurm/lits_ext_prep.sbatch, ~1.5 GB) NOT submitted yet: home is at ~39 GiB, the
+  conversion would pass the keep-10-GB-free line. Waiting for the disk decision.

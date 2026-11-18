@@ -10,7 +10,8 @@ least one tumour and at most --max-slices liver slices (disk and time). Order: m
 under 10 mm first, then most tumours, then patient number. Add patients in that order until
 the 34 tumours of the existing 10 test patients plus the new ones reach --target (100).
 The extended test set = existing 10 locked patients + these. The file is committed before
-any scoring.
+any scoring. (Revision 2, 19 Nov 00:58, before any conversion or scoring: the first version had
+no tumour cap and picked ONE patient, lits_117 with 75 tumours, which alone reached 100.)
 """
 import argparse
 import json
@@ -23,11 +24,13 @@ def main():
     ap.add_argument("--existing-tumours", type=int, default=34)
     ap.add_argument("--target", type=int, default=100)
     ap.add_argument("--max-slices", type=int, default=400)
+    ap.add_argument("--max-tumours", type=int, default=10)
     args = ap.parse_args()
     scan = json.load(open(args.scan))
     cand = [(int(k), v) for k, v in scan.items() if "tumours" in v and v["tumours"] > 0 and 51 <= int(k) <= 130]
     too_big = sorted(k for k, v in cand if v["slices"] > args.max_slices)
-    cand = [(k, v) for k, v in cand if v["slices"] <= args.max_slices]
+    too_many = sorted(k for k, v in cand if v["tumours"] > args.max_tumours)
+    cand = [(k, v) for k, v in cand if v["slices"] <= args.max_slices and v["tumours"] <= args.max_tumours]
     cand.sort(key=lambda kv: (-kv[1]["small"], -kv[1]["tumours"], kv[0]))
     chosen, total, small, slices = [], args.existing_tumours, 0, 0
     for k, v in cand:
@@ -39,8 +42,8 @@ def main():
            "existing_test": "configs/lits_split.json part test (10 patients, 34 tumours)",
            "train": [], "test": sorted(chosen),
            "new_tumours": total - args.existing_tumours, "new_small_tumours": small, "new_slices": slices,
-           "excluded_too_many_slices": too_big,
-           "scan_patients": len(scan), "candidates_with_tumour": len(cand) + len(too_big)}
+           "excluded_too_many_slices": too_big, "excluded_too_many_tumours": too_many,
+           "scan_patients": len(scan), "candidates_with_tumour": len(cand) + len(set(too_big) | set(too_many))}
     json.dump(out, open(args.out, "w"), indent=1)
     print(json.dumps({k: v for k, v in out.items() if k != "rule"}, indent=1))
 
