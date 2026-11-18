@@ -223,7 +223,7 @@ S += [Spacer(1, 5 * cm),
       P("Low-Dose Liver CT Denoising for Small-Tumour Detection", TITLE), Spacer(1, 0.4 * cm),
       P("Project report: benchmark, baselines, tumour-detection evaluation and planned improvements", SUB),
       Spacer(1, 0.3 * cm),
-      P("B.Tech capstone project &nbsp;·&nbsp; status as of 18 November 2026", SUB),
+      P("B.Tech capstone project", SUB),
       Spacer(1, 3 * cm)]
 S.append(table([["At a glance", ""],
                 ["Goal", "Denoise low-dose (quarter-dose) liver CT so that small tumours stay detectable, then improve on the best model."],
