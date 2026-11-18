@@ -1,0 +1,21 @@
+# Final-week steps 3 + 4: settings SHARED by the refiner and its control (scripts/train_tumour.py).
+# Only the model, the patch size and the patches per step differ, so that both see the same
+# number of training pixels per step: refiner 16 x 128^2 = control 64 x 64^2 = 262,144 pixels.
+seed: 0
+mayo_root: data/mayo
+mayo_patients: [L067, L096, L109, L143, L192, L286, L291, L310, L333]   # never L506
+lits_root: data/lits
+lits_split: configs/lits_split.json            # train part only; test part is refused
+iterations: 30000
+lr: 2.0e-4
+lr_min: 1.0e-6
+weight_decay: 1.0e-4
+betas: [0.9, 0.999]
+lesion_weight: 5.0          # tumour pixels count 5x in total
+dilate: 3                   # tumour masks dilated by 3 pixels
+tumour_share: 0.3           # of the LiTS patches, centred on a tumour
+window: 1000                # loss averaged over 1000 iterations; best.pth = lowest window loss
+workers: 8
+modes:
+  refiner: {model: ct_mamba_refiner, patch: 128, batch: 16, stage_a: true}
+  control: {model: ct_mamba, patch: 64, batch: 64, stage_a: false, init: runs/ct_mamba/best_from11.pth}
