@@ -36,8 +36,8 @@ STRUCT = np.ones((3, 3, 3), bool)      # 26-connectivity
 
 # ----------------------------------------------------------------------------- loading
 def load_volume(path):
-    """A 3D integer volume from a .nii/.nii.gz, a 3D .npy, or a folder of 2D .npy slices.
-    Slice folders are stacked in sorted order along axis 0 (z, y, x)."""
+    """A 3D integer volume (z, y, x) from a .nii/.nii.gz, a 3D .npy, or a folder of 2D .npy
+    slices. Slice folders are stacked in sorted order along axis 0."""
     if os.path.isdir(path):
         files = sorted(glob.glob(os.path.join(path, "*.npy")))
         if not files:
@@ -46,7 +46,9 @@ def load_volume(path):
     if path.endswith(".npy"):
         return np.load(path)
     import nibabel as nib
-    return np.asanyarray(nib.load(path).dataobj)
+    # NIfTI arrays are (x, y, z): that is how scripts/prep_nnunet.py writes them and how
+    # nnU-Net writes its predictions back. Return (z, y, x) like the slice folders.
+    return np.ascontiguousarray(np.transpose(np.asanyarray(nib.load(path).dataobj), (2, 1, 0)))
 
 
 def tumour_mask(vol, binary=False):

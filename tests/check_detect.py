@@ -78,5 +78,12 @@ for z in range(shape[0]):
     np.save(os.path.join(tmp, f"p_{z:04d}.npy"), lab[z].astype(np.uint8))
 check("load_volume stacks a slice folder along z", np.array_equal(load_volume(tmp), lab))
 
+# NIfTI round trip: prep_nnunet writes (x, y, z) and nnU-Net predictions come back that way;
+# load_volume must return (z, y, x) like the slice folders (detect job 36232 failed on this).
+from prep_nnunet import save_nifti   # noqa: E402
+vol = np.zeros((5, 7, 9), np.uint8); vol[1, 2, 3] = 2; vol[4, 6, 8] = 1
+nii = os.path.join(tmp, "rt.nii.gz"); save_nifti(vol, (2.0, 0.7, 0.7), nii)
+check("load_volume: NIfTI from prep_nnunet comes back as (z, y, x)", np.array_equal(load_volume(nii), vol))
+
 print("\nFAILED:" if failed else "\nAll detection checks passed.", failed or "")
 sys.exit(1 if failed else 0)
