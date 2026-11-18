@@ -105,30 +105,55 @@ def main():
         start, best_loss = ck["iteration"], ck["best_loss"]
         print(f"resuming after iteration {start} (best window loss {best_loss:.6f})", flush=True)
 
-    loader = DataLoader(data, batch_size=m["batch"], sampler=FromIndex(start * m["batch"], iters * m["batch"]),
-                        num_workers=cfg["workers"], pin_memory=device.type == "cuda", drop_last=True,
-                        persistent_workers=cfg["workers"] > 0)
+    accum = int(m.get("accum", 1))
+    while True:   # find a micro-batch that fits: the step is always m["batch"] patches
+        try:
+            micro = m["batch"] // accum
+            assert micro * accum == m["batch"], "batch must be divisible by accum"
+            loader = DataLoader(data, batch_size=micro, sampler=FromIndex(start * m["batch"], iters * m["batch"]),
+                                num_workers=cfg["workers"], pin_memory=device.type == "cuda", drop_last=True)
+            probe = next(iter(loader))
+            model.train()
+            out = model(probe[0].to(device))
+            l1_lesion(out, probe[1].to(device), probe[2].to(device), cfg["lesion_weight"]).backward()
+            opt.zero_grad(set_to_none=True)
+            del out, probe
+            break
+        except torch.OutOfMemoryError:
+            opt.zero_grad(set_to_none=True)
+            torch.cuda.empty_cache()
+            accum *= 2
+            print(f"out of memory: gradient accumulation over {accum} micro-batches of {m['batch'] // accum}", flush=True)
+            if accum > m["batch"]:
+                raise
+    print(f"micro-batch {micro} x accumulation {accum} = {m['batch']} patches per optimizer step", flush=True)
     model.train()
     it, t0 = start, time.time()
     acc = {"loss": 0.0, "mayo": 0.0, "lits": 0.0, "n_mayo": 0, "n_lits": 0, "tum": 0.0, "lits_px": 0.0, "n": 0}
+    step_loss, k = 0.0, 0
     for x, y, mask, src in loader:
         x, y, mask = x.to(device, non_blocking=True), y.to(device, non_blocking=True), mask.to(device, non_blocking=True)
         pred = model(x)
         loss = l1_lesion(pred, y, mask, cfg["lesion_weight"])
         if not torch.isfinite(loss):
-            raise SystemExit(f"loss {loss.item()} at iteration {it + 1}; latest.pth holds iteration {start}")
-        opt.zero_grad(set_to_none=True)
-        loss.backward()
-        opt.step()
-        sched.step()
-        it += 1
+            raise SystemExit(f"loss {loss.item()} at iteration {it + 1}; latest.pth holds the last window")
+        (loss / accum).backward()
+        step_loss += loss.item() / accum
+        k += 1
         with torch.no_grad():   # per-source plain L1 for the log
             e = (pred - y).abs().mean(dim=(1, 2, 3))
             lits = src.to(device) == 1
             acc["mayo"] += float(e[~lits].sum()); acc["n_mayo"] += int((~lits).sum())
             acc["lits"] += float(e[lits].sum()); acc["n_lits"] += int(lits.sum())
             acc["tum"] += float(mask[lits].any(dim=(1, 2, 3)).float().sum())
-        acc["loss"] += loss.item(); acc["n"] += 1
+        if k < accum:
+            continue
+        opt.step()
+        opt.zero_grad(set_to_none=True)
+        sched.step()
+        loss_value, step_loss, k = step_loss, 0.0, 0
+        it += 1
+        acc["loss"] += loss_value; acc["n"] += 1
         if it % window == 0 or it == iters:
             wl = acc["loss"] / acc["n"]
             row = {"iteration": it, "window_loss": round(wl, 7),

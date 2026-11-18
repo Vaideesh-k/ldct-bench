@@ -18,4 +18,4 @@ window: 1000                # loss averaged over 1000 iterations; best.pth = low
 workers: 8
 modes:
   refiner: {model: ct_mamba_refiner, patch: 128, batch: 16, stage_a: true}
-  control: {model: ct_mamba, patch: 64, batch: 64, stage_a: false, init: runs/ct_mamba/best_from11.pth}
+  control: {model: ct_mamba, patch: 64, batch: 64, accum: 2, stage_a: false, init: runs/ct_mamba/best_from11.pth}   # 2 x 32 patches: 64 do not fit in 20 GB

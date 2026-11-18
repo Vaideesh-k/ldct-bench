@@ -275,3 +275,47 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
   tumours (LiTS part 2) to make detection sensitive.
 - 18 Nov: professor report built: docs/report/LDCT_Project_Report.pdf (8 pages, all numbers
   read from dgx_results by docs/report/make_report.py).
+
+# Final week (branch `final-week`, from `autonomous-nov12`), started 18/19 Nov 2026
+
+Owner: "you make a plan", full access, good progress by the morning of 19 Nov. Defaults taken
+for all open questions (logged here): equal training PIXELS for refiner and control; success
+criterion (b) "best baseline" = best of CT-Mamba/CTformer/CoreDiff; significance = Wilcoxon
+p < 0.05 AND bootstrap 95% CI excluding 0; hybrid 50-epoch runs dropped (out of scope).
+
+- **Step 1 DONE**: docs/success_criteria.md committed (4415a52) before any refiner/control result.
+- **DEADLINE RISK 1, GPU: the account may run only ONE GPU job at a time** (association
+  GrpTRES gres/gpu=1, any MIG size; this is what "AssocGrpGRES" meant on 16 Nov). So refiner and
+  control CANNOT run in parallel; everything GPU is a single queue: control -> precompute ->
+  refiner -> predictions -> detection -> extended set. All 7 full A100s were busy with 39
+  full-A100 jobs pending, so the control runs on a free a100_4g.20gb MIG slice.
+- **DEADLINE RISK 2, disk**: home 40.96 GB (du -sb) of 50; the 10-GB-free rule leaves ~1 GB, and
+  the Stage-A precompute needs ~5 GB (int16, 5,410 Mayo + 5,816 LiTS train slices). The plan
+  is to free ~8 GB by archiving data/nnunet/raw (+ preprocessed, rebuildable), the CTformer
+  and CoreDiff LiTS predictions and runs/ct_mamba/latest.pth to the owner's laptop and then
+  delete them on the DGX. The archive copy is running from the laptop; the delete itself was
+  refused by this session's safety check, so it needs the owner's explicit OK (or the owner
+  runs it). Until then the precompute and the refiner cannot start; the control can.
+- LiTS part 2: per-file `kaggle -f` answers 404 again (18 Nov), and the archives (11.6 GB part
+  2 + 5.2 GB part 1 for the masks) do not fit. NEW scripts/remote_zip.py reads single members
+  straight from the remote archive with HTTP range requests (zip CRC checked), so no archive
+  is stored: 39 MB mask in 25 s.
+- **Step 6 started**: job **39373** (cpu_student) scans the masks of patients 51-130 (tumour
+  counts / sizes counted exactly like detect_eval, no images or models) ->
+  results/lits_ext_scan.json, to choose the extended test set before anything is scored.
+- **Step 3/4 code DONE** (b82f0e0): ldct/tumour_train.py (MixedPatches: deterministic patch i =
+  f(seed, i); even i Mayo, odd i LiTS train; 30% of LiTS patches centred on tumour; l1_lesion =
+  mean|e| + 4 x mean(mask x |e|), masks dilated 3 px), ldct/models/ct_mamba_refiner.py
+  (2D U-Net 32/64/128/256, GroupNorm + SiLU, bilinear up, zero-init head: 2,143,169
+  parameters), scripts/train_tumour.py (iteration-based, AdamW 2e-4 cosine, wd 1e-4, best.pth =
+  lowest 1000-iteration window loss), tests/check_refiner.py (26 checks, all pass on the Mac and
+  on the DGX).
+- Pixel matching (logged): refiner 16 x 128^2 = control 64 x 64^2 = 262,144 pixels per step,
+  30,000 steps each (7.9e9 pixels). CT-Mamba takes only 64x64 inputs. 64 patches did not fit in
+  20 GB (job 39376 OOM), so the control accumulates gradients over 2 x 32 patches: the same
+  262,144 pixels per optimizer step. The control trains CT-Mamba's denoiser only (its
+  loss-side noise nets are not used by this loss); 50.8 M trainable parameters.
+- best.pth and best_from11.pth of CT-Mamba hold identical weights (epoch 237), so the existing
+  CT-Mamba predictions (runs/ct_mamba/predictions/{mayo_L506,lits}) are valid Stage-A inputs
+  for testing the refiner.
+- **Step 4 SUBMITTED**: control = job **39377** (a100_4g.20gb).

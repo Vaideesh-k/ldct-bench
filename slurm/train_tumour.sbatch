@@ -16,6 +16,7 @@ MODE=${1:?refiner or control}; shift
 source ~/miniforge3/etc/profile.d/conda.sh
 conda activate ctmamba
 cd ~/ldct-bench
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 echo "host: $(hostname) | date: $(date) | mode: $MODE | $(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader | head -1)"
 du -sh ~ | tail -1
 python tests/check_refiner.py | tail -2
