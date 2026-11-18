@@ -5,7 +5,7 @@
 #     J1=$(sbatch --parsable --job-name=s50_hyb_low  --dependency=afterany:$J0 slurm/short50.sbatch ct_mamba_hybrid hybrid_low_50)
 #     J2=$(sbatch --parsable --job-name=s50_hyb_small --dependency=afterany:$J1 slurm/short50.sbatch ct_mamba_hybrid hybrid_small_50 configs/variants/hybrid_small.yaml)
 #     J3=$(sbatch --parsable --job-name=s50_hyb_par  --dependency=afterany:$J2 slurm/short50.sbatch ct_mamba_hybrid hybrid_parallel_50 configs/variants/hybrid_parallel.yaml)
-# Each: train 50 epochs (resumable), predict L506 with best.pth, evaluate (per-slice scores).
+# Each: train 50 epochs (resumable), predict L506 only with best.pth, evaluate (per-slice scores).
 # Expected ~14 h each for CT-Mamba-sized models (250 epochs took 2d 22h = 17 min/epoch;
 # the attention variants may differ, see the hybrid test job's timing).
 #SBATCH --partition=gpu_student
@@ -26,6 +26,12 @@ conda activate ctmamba
 cd ~/ldct-bench
 echo "host: $(hostname) | date: $(date) | model: $MODEL | run: $RUN | variant: ${VARIANT:-default}"
 nvidia-smi --query-gpu=name,memory.total --format=csv
-bash scripts/run_all.sh "$MODEL" --run "$RUN" --config configs/short50.yaml $VARIANT
+# Mayo L506 only: the home quota has no room for 4 x 1.5 GB of LiTS predictions; the winning
+# variant can be predicted on LiTS afterwards (slurm/predict_lits.sbatch).
+CFG=(--config configs/short50.yaml $VARIANT)
+python scripts/train.py --model "$MODEL" --run "$RUN" --resume "${CFG[@]}"
+python scripts/predict.py --model "$MODEL" --run "$RUN" --sets mayo_L506 "${CFG[@]}"
+python scripts/evaluate.py --model "$MODEL" --run "$RUN" --sets mayo_L506 "${CFG[@]}"
+du -sh ~ | tail -1
 cp "runs/$RUN/train_log.csv" "results/${RUN}_train_log.csv"
 echo "finished: $(date)"
