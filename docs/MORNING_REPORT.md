@@ -35,13 +35,29 @@ dgx_results/<model>_scores_lits.csv. Low dose = parallel-beam Poisson + electron
   converted (7,274 liver slices with masks, 5 patients without tumour).
 - Step 5: nnU-Net v2 installed; dataset + training job written and queued (35522).
 
+## Detection results (10 locked LiTS test patients, 34 tumours, 9 under 10 mm, same nnU-Net)
+
+| input | detected | small detected | FP / patient | per-tumour Dice |
+|---|---|---|---|---|
+| normal dose | 27/34 | 5/9 | 0.6 | 0.582 |
+| quarter dose | 28/34 | 5/9 | 0.5 | 0.565 |
+| CT-Mamba | 27/34 | 5/9 | 0.3 | 0.543 |
+| CoreDiff | 28/34 | 5/9 | 0.5 | 0.584 |
+| CTformer | 28/34 | 5/9 | 0.5 | 0.585 |
+
+Detection counts do not separate the inputs at quarter dose (the same small tumours are missed
+everywhere). Per-tumour Dice does: quarter dose is lower than normal dose (paired p = 0.018);
+CoreDiff and CTformer recover it; CT-Mamba does not (lowest, p = 0.16). Details:
+dgx_results/detect_paired.json, scripts/detect_compare.py. Full write-up for the professor:
+docs/report/LDCT_Project_Report.pdf.
+
 ## Running / queued on the DGX (16 Nov)
 | job | what | expected |
 |---|---|---|
 | 36228 | LiTS low-dose resimulation with per-patient exposure calibration (CPU) | DONE 16 Nov, 2 h 49 min, 51/51 patients |
 | 36229 / 36230 / 36231 | predict + evaluate CTformer / CoreDiff / CT-Mamba on the 10 locked LiTS test patients (MIG slices) | DONE 16 Nov (8 min / 6 min / 58 min), table above |
 | 35522 | nnU-Net 3d_fullres, 250 epochs, fold 0 | DONE 17 Nov, 4 h 11 min; validation pseudo Dice liver 0.965, tumour 0.681 |
-| 38156 | nnU-Net on normal dose / quarter dose / CT-Mamba / CTformer / CoreDiff LiTS test outputs -> lesion detection rates (results/detect_summary.csv) | resubmitted 18 Nov after an axis-order fix (first attempt 36232 failed); ~1 h on a MIG slice |
+| 38156 | nnU-Net on normal dose / quarter dose / each model's LiTS output -> lesion detection | DONE 18 Nov (40 min); see Detection results |
 
 ## Problems and what I did about them
 - Kaggle serves this dataset only as a whole archive; downloaded on a CPU node, patients

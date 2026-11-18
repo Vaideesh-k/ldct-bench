@@ -1,0 +1,136 @@
+{
+ "lesions": 34,
+ "small_lesions": 9,
+ "small_mm": 10.0,
+ "per_input": {
+  "full": {
+   "mean_lesion_dice": 0.5818004045922514,
+   "mean_dice_small": 0.29899869940902035,
+   "mean_dice_large": 0.6836090184582144,
+   "detected": 27
+  },
+  "quarter": {
+   "mean_lesion_dice": 0.5649090286941809,
+   "mean_dice_small": 0.2757435628690682,
+   "mean_dice_large": 0.6690085963912215,
+   "detected": 28
+  },
+  "ct_mamba": {
+   "mean_lesion_dice": 0.5425084002327994,
+   "mean_dice_small": 0.2475565660867501,
+   "mean_dice_large": 0.6486910605253772,
+   "detected": 27
+  },
+  "corediff": {
+   "mean_lesion_dice": 0.5843520296208384,
+   "mean_dice_small": 0.30958280996295445,
+   "mean_dice_large": 0.6832689486976767,
+   "detected": 28
+  },
+  "ctformer": {
+   "mean_lesion_dice": 0.5851923011514124,
+   "mean_dice_small": 0.3071155365790477,
+   "mean_dice_large": 0.6852999363974637,
+   "detected": 28
+  }
+ },
+ "paired": {
+  "quarter_vs_full": {
+   "mean_dice_difference": -0.016891375898070427,
+   "lesions_better": 4,
+   "lesions_worse": 9,
+   "wilcoxon_p": 0.01787351581903152
+  },
+  "ct_mamba_vs_full": {
+   "mean_dice_difference": -0.039292004359451946,
+   "lesions_better": 8,
+   "lesions_worse": 13,
+   "wilcoxon_p": 0.16348377229005917
+  },
+  "corediff_vs_full": {
+   "mean_dice_difference": 0.00255162502858704,
+   "lesions_better": 10,
+   "lesions_worse": 9,
+   "wilcoxon_p": 0.927424500241308
+  },
+  "ctformer_vs_full": {
+   "mean_dice_difference": 0.0033918965591611043,
+   "lesions_better": 9,
+   "lesions_worse": 7,
+   "wilcoxon_p": 0.9093510601128354
+  },
+  "full_vs_quarter": {
+   "mean_dice_difference": 0.016891375898070427,
+   "lesions_better": 9,
+   "lesions_worse": 4,
+   "wilcoxon_p": 0.01787351581903152
+  },
+  "ct_mamba_vs_quarter": {
+   "mean_dice_difference": -0.022400628461381515,
+   "lesions_better": 9,
+   "lesions_worse": 13,
+   "wilcoxon_p": 0.4802415427194643
+  },
+  "corediff_vs_quarter": {
+   "mean_dice_difference": 0.019443000926657468,
+   "lesions_better": 12,
+   "lesions_worse": 6,
+   "wilcoxon_p": 0.18357532003674304
+  },
+  "ctformer_vs_quarter": {
+   "mean_dice_difference": 0.02028327245723153,
+   "lesions_better": 11,
+   "lesions_worse": 4,
+   "wilcoxon_p": 0.07443762498218096
+  }
+ },
+ "missed": [
+  {
+   "patient": "lits_010",
+   "lesion": 5,
+   "diameter_mm": 7.1,
+   "detected_by": []
+  },
+  {
+   "patient": "lits_011",
+   "lesion": 1,
+   "diameter_mm": 5.5,
+   "detected_by": []
+  },
+  {
+   "patient": "lits_026",
+   "lesion": 5,
+   "diameter_mm": 2.2,
+   "detected_by": []
+  },
+  {
+   "patient": "lits_026",
+   "lesion": 6,
+   "diameter_mm": 2.7,
+   "detected_by": []
+  },
+  {
+   "patient": "lits_028",
+   "lesion": 3,
+   "diameter_mm": 21.0,
+   "detected_by": [
+    "corediff",
+    "ctformer"
+   ]
+  },
+  {
+   "patient": "lits_029",
+   "lesion": 0,
+   "diameter_mm": 29.9,
+   "detected_by": [
+    "quarter"
+   ]
+  },
+  {
+   "patient": "lits_045",
+   "lesion": 0,
+   "diameter_mm": 20.5,
+   "detected_by": []
+  }
+ ]
+}

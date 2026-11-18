@@ -257,3 +257,21 @@ pending nnU-Net job (normal dose) is unaffected and no archive is needed.
   prep_nnunet.save_nifti. New round-trip test in tests/check_detect.py; detection and
   nnU-Net prep tests pass. Fix copied to the DGX. RESUBMITTED as **detect_all 38156**.
   Home 39 GB (each detection pass adds ~0.5 GB temporarily and deletes it).
+- 18 Nov: **detect_all 38156 COMPLETED** (40 min). Same nnU-Net on the 10 locked LiTS test
+  patients, 34 tumours (9 under 10 mm):
+  | input | detected | small detected | FP / patient | per-patient Dice | per-tumour Dice |
+  |---|---|---|---|---|---|
+  | normal dose | 27/34 | 5/9 | 0.6 | 0.605 | 0.582 |
+  | quarter dose | 28/34 | 5/9 | 0.5 | 0.601 | 0.565 |
+  | CT-Mamba | 27/34 | 5/9 | 0.3 | 0.576 | 0.543 |
+  | CoreDiff | 28/34 | 5/9 | 0.5 | 0.594 | 0.584 |
+  | CTformer | 28/34 | 5/9 | 0.5 | 0.599 | 0.585 |
+  Detection counts are saturated: 5 tumours (2.2-7.1 mm and one 20.5 mm) are missed on every
+  input, two more flip by chance. Paired per-tumour Dice (new scripts/detect_compare.py ->
+  dgx_results/detect_paired.json, Wilcoxon): quarter vs normal -0.017 (p = 0.018, the only
+  significant difference); CoreDiff +0.003 and CTformer +0.003 vs normal (recover the loss);
+  CT-Mamba -0.039 vs normal (p = 0.16), lowest on small tumours too. Best PSNR is not best
+  tumour outline: supports Idea 1. Suggested next: lower-dose test (10 %, 5 %) and more
+  tumours (LiTS part 2) to make detection sensitive.
+- 18 Nov: professor report built: docs/report/LDCT_Project_Report.pdf (8 pages, all numbers
+  read from dgx_results by docs/report/make_report.py).
