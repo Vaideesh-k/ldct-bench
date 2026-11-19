@@ -306,6 +306,12 @@ card(s, 4.7, 3.0, 3.9, 3.2, "Tumour-aware loss", ["L1 + lesion-weighted L1", "Tu
 card(s, 8.8, 3.0, 3.9, 3.2, "Training", ["128 x 128 patches, batch 16", "50% Mayo / 50% LiTS train; ~30% of LiTS patches contain tumour", "AdamW, lr 2e-4, cosine, 30,000 iterations", "26 unit checks written first, all pass"], { bullet: true, size: 16 });
 s.addNotes("Zero-init means the refiner starts as an exact copy of CT-Mamba and can only move away from it if the loss asks it to.");
 
+// ================================================================= 13b final architecture figure
+s = pres.addSlide({ sectionTitle: "Final week" });
+s.background = { color: "FFFFFF" };
+s.addImage({ path: __dirname + "/final_architecture.png", x: 1.47, y: 0.3, w: 10.4, h: 6.5, altText: "Final architecture: frozen CT-Mamba (Stage A) feeding a 2D U-Net refiner (Stage B, 32/64/128/256 channels, zero-init residual head) whose output is added to the Stage-A image; below, five cards on data, loss, optimisation, the fair control and evaluation.", objectName: "archfig" });
+s.addNotes("Walk through left to right: noisy slice, frozen CT-Mamba, concatenate noisy + Stage A, U-Net, zero-init residual added back. Then the five training cards. Stress: masks only in the loss, nothing extra at test time; the control uses the same data, loss and pixel budget.");
+
 // ================================================================= 14 control + criteria
 s = content("Final week", "A fair control and success criteria fixed in advance");
 card(s, 0.6, 1.45, 4.6, 4.8, "Control experiment", [
