@@ -8,6 +8,7 @@ const HEX = {
 };
 const THEME = { name: "LDCT Liver", headFontFace: "Cambria", bodyFontFace: "Calibri", colors: HEX };
 
+const PLAN = process.env.PLAN === "1";
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.33 x 7.5
 pres.title = "Low-dose CT denoising for small liver tumours";
@@ -92,7 +93,7 @@ const chartBase = {
 pres.addSection({ title: "Introduction" });
 let s = pres.addSlide({ masterName: "TITLE_DARK", sectionTitle: "Introduction" });
 s.addText("Low-dose CT denoising for small liver tumours", { placeholder: "title" });
-s.addText("Does a denoiser that wins on image quality also help find tumours under 10 mm?\nB.Tech capstone  |  progress review and plan for the final week  |  19 November 2026", { placeholder: "body" });
+s.addText("Does a denoiser that wins on image quality also help find tumours under 10 mm?\nB.Tech capstone  |  " + (PLAN ? "progress review, final architecture and training plan" : "progress review and plan for the final week") + "  |  19 November 2026", { placeholder: "body" });
 s.addNotes("Introduce the project: we compare deep-learning denoisers for quarter-dose CT, and test them not only on image scores but on whether a tumour segmenter still finds small liver tumours.");
 
 // ================================================================= 2 problem
@@ -381,6 +382,91 @@ risks.forEach(([h, r, m], i) => {
   card(s, x, y, 5.95, 2.25, h, [r, "Mitigation: " + m], { size: 16, headSize: 18 });
 });
 s.addNotes("Also: nnU-Net trained for 250 epochs on one fold instead of the default 1000 x 5 folds, to fit the schedule.");
+
+// ================================================================= TRAINING PLAN (only in the plan deck)
+if (PLAN) {
+pres.addSection({ title: "Training plan" });
+s = pres.addSlide({ masterName: "SECTION_DARK", sectionTitle: "Training plan" });
+s.addText("Training plan for the new model", { placeholder: "title" });
+s.addText("From freeing disk space to the final verdict on 106 tumours", { placeholder: "body" });
+
+// ---- step by step
+s = content("Training plan", "Training plan, step by step");
+const tsteps = [
+  ["Free disk", "Archive rebuildable data to the laptop, then delete it here: frees ~8 GB", "prerequisite"],
+  ["Stage A", "Frozen CT-Mamba on 11,226 train slices (Mayo + LiTS), saved as int16", "~6 h, ~5 GB"],
+  ["Train refiner", "26 checks + smoke run, then 30,000 iterations (resumable)", "~2-4 h, MIG 4g"],
+  ["Evaluate", "Refiner and control on L506 + 10 LiTS patients: images + detection", "~1.5 h each"],
+  ["Statistics", "Paired Wilcoxon + bootstrap 95% CIs; pass / fail for criteria (a)-(e)", "minutes, CPU"],
+  ["Extended set", "Convert 10 new LiTS patients (CPU), score all 7 inputs on 106 tumours", "~5 h GPU"],
+  ["Report", "Tables, zoomed small-tumour figure, training curves", "final day"],
+];
+tsteps.forEach(([h, b, t], i) => {
+  const y = 1.4 + i * 0.73;
+  circleNum(s, 0.6, y + 0.04, 0.55, String(i + 1), i === 0 ? C.accent5 : (i < 3 ? C.accent1 : C.accent2));
+  s.addText(h, { x: 1.35, y, w: 2.1, h: 0.63, fontSize: 16, bold: true, color: C.text2, valign: "middle", isTextBox: true, margin: 0, objectName: `tsh${i}` });
+  card(s, 3.5, y, 7.0, 0.63, null, b, { size: 14 });
+  card(s, 10.7, y, 2.0, 0.63, null, t, { size: 14, fill: "E2F1F2" });
+});
+s.addNotes("Steps 2-4 are GPU work and must run one after the other: the account allows one GPU job at a time. Step 6's conversion is CPU-only and runs in parallel.");
+
+// ---- hyperparameters side by side
+s = content("Training plan", "Training settings: refiner vs control");
+table(s, [
+  ["Setting", "Refiner (new model)", "Control (CT-Mamba fine-tune)"],
+  ["What is trained", HL("U-Net only, 2.14 M parameters"), "CT-Mamba denoiser, 50.8 M parameters"],
+  ["Starting point", "Zero-init head = exactly CT-Mamba's output", "CT-Mamba best checkpoint (epoch 237)"],
+  ["Input", "2 channels: [noisy, Stage A]", "1 channel: noisy"],
+  ["Patches x batch", "128 x 128 x 16", "64 x 64 x 64 (2 x 32, gradient accumulation)"],
+  ["Pixels per step", HL("262,144"), HL("262,144")],
+  ["Data mix", "50% Mayo / 50% LiTS train, ~30% tumour patches", "same (same seed, same patch list)"],
+  ["Loss", "L1 + lesion-weighted L1 (tumour 5x, mask dilated 3 px)", "same"],
+  ["Optimiser", "AdamW, lr 2e-4 → 1e-6 cosine, wd 1e-4, 30,000 iterations", "same"],
+  ["Checkpoint", "Lowest 1,000-iteration training-loss window", "same (done: 0.004045)"],
+  ["GPU", "A100 MIG 4g.20gb", "A100 MIG 4g.20gb (11 h 3 min)"],
+], { x: 0.6, y: 1.4, w: 12.1, colW: [2.4, 5.0, 4.7], rowH: 0.42 });
+note(s, "Everything except the network is identical, so a difference between the two isolates the refiner design.", 6.35);
+s.addNotes("The control already finished on 19 Nov at 11:19. The refiner uses the same deterministic patch list (patch i depends only on seed and i).");
+
+// ---- schedule
+s = content("Training plan", "Day-by-day schedule to the deadline");
+const days = [
+  ["19 Nov", "Control trained (done)\nFree disk, start Stage A", C.accent6],
+  ["20 Nov", "Stage A done\nTrain refiner\nEvaluate control", C.accent1],
+  ["21 Nov", "Evaluate refiner\nFirst verdict on 10 patients", C.accent1],
+  ["22 Nov", "Extended set conversion (CPU)\nScore CT-Mamba, refiner", C.accent2],
+  ["23 Nov", "Score control, CTformer, CoreDiff on extended set", C.accent2],
+  ["24 Nov", "Final statistics, figures, report tables", C.text2],
+  ["25 Nov", "Buffer + final presentation", C.accent3],
+];
+const dw = 1.6, dg = 0.15;
+days.forEach(([d, t, col], i) => {
+  const x = 0.6 + i * (dw + dg);
+  n++;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.5, w: dw, h: 0.7, rectRadius: 0.08, fill: { color: col }, line: { color: col }, objectName: `day${n}` });
+  s.addText(d, { x, y: 1.5, w: dw, h: 0.7, align: "center", valign: "middle", fontSize: 16, bold: true, color: C.background1, isTextBox: true, margin: 0, objectName: `dayt${n}` });
+  card(s, x, 2.35, dw, 2.4, null, t.split("\n"), { size: 14 });
+});
+card(s, 0.6, 5.0, 5.9, 1.25, "Milestone 1 (21 Nov)", "Steps 1-5 with a first evaluation on the existing 10 patients, within the 3-day target.", { size: 14 });
+card(s, 6.8, 5.0, 5.9, 1.25, "Milestone 2 (24 Nov)", "Final verdict on the 20-patient, 106-tumour extended test set.", { size: 14 });
+s.addNotes("If the GPU queue delays the refiner by more than a day, both refiner and control evaluations keep the same budget; the plan allows shortening both runs equally.");
+
+// ---- safeguards
+s = content("Training plan", "Safeguards built into training");
+const guards = [
+  ["No test leakage", "The patch sampler refuses Mayo L506 and every locked LiTS patient; checkpoints are chosen on training loss only."],
+  ["Tests before GPU time", "26 checks (shapes, zero-init, loss inside/outside mask, sampling share, locked-patient refusal) + a smoke run in every job."],
+  ["Masks only in the loss", "Inference takes only the CT slice; no tumour mask and no nnU-Net are ever used to produce an image."],
+  ["Disk and queue", "Every job checks the 40 GB line first and stops cleanly; runs resume from latest.pth after any interruption."],
+  ["Fixed in advance", "Success criteria (a)-(e) and the extended-set selection rule were committed before any result."],
+  ["Stop rule", "A step that fails 3 times is logged as blocked and the plan moves on, so one problem cannot stop the week."],
+];
+guards.forEach(([h, b], i) => {
+  const x = 0.6 + (i % 3) * 4.1, y = 1.45 + Math.floor(i / 3) * 2.45;
+  card(s, x, y, 3.9, 2.25, h, b, { size: 14, headSize: 17 });
+});
+s.addNotes("These make the result trustworthy: if the refiner wins, it is not because it saw test data or because the metric was picked afterwards.");
+}
 
 // ================================================================= 18 conclusion
 pres.addSection({ title: "Summary" });
