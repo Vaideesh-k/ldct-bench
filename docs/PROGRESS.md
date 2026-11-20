@@ -354,3 +354,36 @@ p < 0.05 AND bootstrap 95% CI excluding 0; hybrid 50-epoch runs dropped (out of 
   512 slices and GroupNorm statistics depend on image size; if its PSNR drops, tiled inference
   is the first fix (inference only).
 - SUBMITTED 20 Nov: **refiner_pipeline = job 42024** (control eval -> Stage A -> refiner -> refiner eval -> refiner25d -> refiner25d eval). tests/check_refiner.py (36 checks incl. 2.5D + scratch path) ALL PASSED on a DGX node.
+- **Job 42024 COMPLETED 20 Nov 17:25** (7 h 9 min, 0:0). Home stayed at 39.9-40 GB the whole time
+  (all temporaries on node /tmp, removed). Live check: stored Stage A = live CT-Mamba to
+  <= 0.026 HU on 3 L506 + 3 LiTS slices. Training: refiner best window loss 0.003978,
+  refiner25d 0.003826 (30,000 iterations each, ~31 s per 1,000-iteration window, ~16 min per model).
+
+### First evaluation (existing 10 LiTS patients, 34 tumours, 9 < 10 mm; L506 526 slices) - PRELIMINARY
+`scripts/final_stats.py --refiner {ct_mamba_refiner|ct_mamba_refiner25d}` ->
+dgx_results/final_existing10{,_25d}.{md,json,_image.csv,_detection.csv,_paired.csv}
+
+| input | L506 PSNR [95% CI] | SSIM | detected | < 10 mm | FP/pt | per-tumour Dice |
+|---|---|---|---|---|---|---|
+| CT-Mamba | 29.42 [29.26, 29.57] | 0.8776 | 27/34 | 5/9 | 0.30 | 0.543 |
+| CTformer | 28.56 | 0.8680 | 28/34 | 5/9 | 0.50 | 0.585 |
+| CoreDiff | 29.28 | 0.8817 | 28/34 | 5/9 | 0.50 | 0.584 |
+| control | 29.41 [29.26, 29.57] | 0.8775 | 28/34 | 5/9 | 0.70 | 0.582 |
+| refiner (2D) | 29.42 [29.26, 29.57] | 0.8775 | 28/34 | 5/9 | 0.50 | 0.582 |
+| refiner 2.5D | **29.64** [29.48, 29.79] | **0.8826** | 28/34 | 5/9 | 0.60 | 0.585 |
+
+Criteria (docs/success_criteria.md):
+- 2D refiner: a FAIL (29.4176 < 29.42; -0.001 dB vs CT-Mamba, i.e. the residual learned almost
+  nothing on Mayo), b FAIL (0.5819 < CTformer 0.5852), c FAIL (0.5819 vs control 0.5820),
+  d FAIL, e FAIL (0.5 > 0.3). **NOT A WIN.**
+- 2.5D refiner (second variant, decided 20 Nov before results): a PASS (+0.22 dB vs CT-Mamba,
+  paired CI [+0.215, +0.222], p < 1e-4; also +0.36 dB vs CoreDiff, best SSIM of all inputs),
+  b FAIL by 0.0006 (0.5846 vs 0.5852), c PASS on the point estimate (+0.0026) but not
+  significant (CI [-0.0030, +0.0085], p 0.52), d FAIL, e FAIL (0.6). **NOT A WIN.**
+- Detection counts are identical for every denoised input (28/34, small 5/9); denoising does not
+  change which tumours the nnU-Net finds on this set. Dice differences between all trained
+  denoisers except CT-Mamba are <= 0.004 and not significant; CT-Mamba alone is lower (refiner,
+  2.5D and control all beat it, p 0.02 / 0.02 / 0.06).
+- Caveat: two variants are judged against the same criteria, so a single pass would need a
+  multiple-comparison note; not relevant since neither passes. The extended 20-patient set
+  (step 6) is the final verdict.

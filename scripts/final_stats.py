@@ -22,7 +22,8 @@ from scipy.stats import wilcoxon
 
 NAMES = {"full": "normal dose", "quarter": "quarter dose", "quarter_dose": "quarter dose",
          "ct_mamba": "CT-Mamba", "ctformer": "CTformer", "corediff": "CoreDiff",
-         "ct_mamba_control": "control", "ct_mamba_refiner": "refiner"}
+         "ct_mamba_control": "control", "ct_mamba_refiner": "refiner",
+         "ct_mamba_refiner25d": "2.5D refiner"}
 BASELINES = ["ct_mamba", "ctformer", "corediff"]
 B, SEED = 10_000, 0
 
@@ -77,10 +78,11 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--small-mm", type=float, default=10.0)
     ap.add_argument("--psnr-target", type=float, default=29.42)
+    ap.add_argument("--refiner", default="ct_mamba_refiner", help="candidate judged by the criteria (ct_mamba_refiner25d = 2.5D variant)")
     args = ap.parse_args()
     dres = args.detect_results or args.results
-    img_inputs = ["quarter_dose"] + BASELINES + ["ct_mamba_control", "ct_mamba_refiner"]
-    det_inputs = ["full", "quarter"] + BASELINES + ["ct_mamba_control", "ct_mamba_refiner"]
+    img_inputs = ["quarter_dose"] + BASELINES + ["ct_mamba_control", "ct_mamba_refiner", "ct_mamba_refiner25d"]
+    det_inputs = ["full", "quarter"] + BASELINES + ["ct_mamba_control", "ct_mamba_refiner", "ct_mamba_refiner25d"]
     S = {n: load_scores(args.results, n) for n in img_inputs}
     D = {n: load_detect(dres, n) for n in det_inputs}
     S = {k: v for k, v in S.items() if v is not None}
@@ -106,8 +108,8 @@ def main():
             "per_tumour_dice_small": float(d["dice"][small].mean()) if small.any() else None,
             "per_patient_dice": sm.get("mean_per_patient_dice"), "patients": sm["patients"]}
 
-    ref = "ct_mamba_refiner"
-    others = [n for n in ("ct_mamba_control",) + tuple(BASELINES) + ("quarter", "full") if n in D]
+    ref = args.refiner
+    others = [n for n in ("ct_mamba_control", "ct_mamba_refiner", "ct_mamba_refiner25d") if n != ref and n in D] + [n for n in (tuple(BASELINES) + ("quarter", "full")) if n in D]
     if ref in D:
         for n in others:
             out["paired"][f"dice_{ref}_vs_{n}"] = paired(D[ref]["dice"], D[n]["dice"], rng)
@@ -158,7 +160,7 @@ def main():
         for k, v in out["paired"].items():
             w.writerow([k, round(v["mean_difference"], 5), round(v["ci_low"], 5), round(v["ci_high"], 5), round(v["wilcoxon_p"], 4), v["significant"]])
 
-    L = [f"# Results: {args.tag}", "", "## Mayo L506 (window -160..240 HU), mean [95% bootstrap CI]", "",
+    L = [f"# Results: {args.tag} (candidate: {NAMES[ref]})", "", "## Mayo L506 (window -160..240 HU), mean [95% bootstrap CI]", "",
          "| input | PSNR dB | SSIM | RMSE HU |", "|---|---|---|---|"]
     for n, v in out["image"].items():
         L.append(f"| {NAMES[n]} | " + " | ".join(f"{v[k]['mean']:.{p}f} [{v[k]['ci_low']:.{p}f}, {v[k]['ci_high']:.{p}f}]"

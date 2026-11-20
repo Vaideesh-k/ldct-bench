@@ -1,0 +1,563 @@
+{
+ "tag": "existing10",
+ "bootstrap": {
+  "resamples": 10000,
+  "seed": 0
+ },
+ "image": {
+  "quarter_dose": {
+   "psnr": {
+    "mean": 24.468780777432432,
+    "ci_low": 24.29031807022412,
+    "ci_high": 24.642407261655876
+   },
+   "ssim": {
+    "mean": 0.8381614362247696,
+    "ci_low": 0.8345378985348072,
+    "ci_high": 0.8416742711095514
+   },
+   "rmse": {
+    "mean": 24.637005899467436,
+    "ci_low": 24.073349903666188,
+    "ci_high": 25.2025521193162
+   },
+   "slices": 526
+  },
+  "ct_mamba": {
+   "psnr": {
+    "mean": 29.418675074577344,
+    "ci_low": 29.262175555544122,
+    "ci_high": 29.57447660589974
+   },
+   "ssim": {
+    "mean": 0.8776001791088061,
+    "ci_low": 0.8743473242190297,
+    "ci_high": 0.8808187983312035
+   },
+   "rmse": {
+    "mean": 13.849094795990846,
+    "ci_low": 13.577995958218988,
+    "ci_high": 14.13000963218905
+   },
+   "slices": 526
+  },
+  "ctformer": {
+   "psnr": {
+    "mean": 28.56145131053099,
+    "ci_low": 28.40088177222411,
+    "ci_high": 28.71230405581876
+   },
+   "ssim": {
+    "mean": 0.8680220165758677,
+    "ci_low": 0.8647744827397089,
+    "ci_high": 0.871270025755934
+   },
+   "rmse": {
+    "mean": 15.279184695068638,
+    "ci_low": 14.982073817582565,
+    "ci_high": 15.585561968723049
+   },
+   "slices": 526
+  },
+  "corediff": {
+   "psnr": {
+    "mean": 29.278863569287637,
+    "ci_low": 29.117272745316082,
+    "ci_high": 29.431056359670645
+   },
+   "ssim": {
+    "mean": 0.8817131500720508,
+    "ci_low": 0.8786340262170271,
+    "ci_high": 0.884683126194319
+   },
+   "rmse": {
+    "mean": 14.07016505612595,
+    "ci_low": 13.795688608311933,
+    "ci_high": 14.352328849764968
+   },
+   "slices": 526
+  },
+  "ct_mamba_control": {
+   "psnr": {
+    "mean": 29.414374039494543,
+    "ci_low": 29.25924398582655,
+    "ci_high": 29.56756241960501
+   },
+   "ssim": {
+    "mean": 0.877507224036352,
+    "ci_low": 0.8742736156447005,
+    "ci_high": 0.8806487422555871
+   },
+   "rmse": {
+    "mean": 13.856994396222687,
+    "ci_low": 13.583047120077081,
+    "ci_high": 14.134871195508433
+   },
+   "slices": 526
+  },
+  "ct_mamba_refiner": {
+   "psnr": {
+    "mean": 29.417596772523723,
+    "ci_low": 29.263422405591832,
+    "ci_high": 29.57432350551849
+   },
+   "ssim": {
+    "mean": 0.8775050476361351,
+    "ci_low": 0.8741840471621283,
+    "ci_high": 0.8807238546798063
+   },
+   "rmse": {
+    "mean": 13.850766777979699,
+    "ci_low": 13.574506617054126,
+    "ci_high": 14.130279762512982
+   },
+   "slices": 526
+  },
+  "ct_mamba_refiner25d": {
+   "psnr": {
+    "mean": 29.637244274164342,
+    "ci_low": 29.47933341987194,
+    "ci_high": 29.794127911071985
+   },
+   "ssim": {
+    "mean": 0.8825512305167613,
+    "ci_low": 0.8794154737791257,
+    "ci_high": 0.8856821417761126
+   },
+   "rmse": {
+    "mean": 13.51433961909449,
+    "ci_low": 13.239336110090608,
+    "ci_high": 13.783625737796998
+   },
+   "slices": 526
+  }
+ },
+ "detection": {
+  "full": {
+   "tumours": 34,
+   "detected": 27,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.6,
+    "ci_low": 0.2,
+    "ci_high": 1.0
+   },
+   "per_tumour_dice": {
+    "mean": 0.5818004045922514,
+    "ci_low": 0.4587937299750173,
+    "ci_high": 0.6967989073213049
+   },
+   "per_tumour_dice_small": 0.29899869940902035,
+   "per_patient_dice": 0.6051253490355272,
+   "patients": 10
+  },
+  "quarter": {
+   "tumours": 34,
+   "detected": 28,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.5,
+    "ci_low": 0.2,
+    "ci_high": 0.8
+   },
+   "per_tumour_dice": {
+    "mean": 0.5649090286941809,
+    "ci_low": 0.44337518199944387,
+    "ci_high": 0.676719980770502
+   },
+   "per_tumour_dice_small": 0.2757435628690682,
+   "per_patient_dice": 0.6008068936056962,
+   "patients": 10
+  },
+  "ct_mamba": {
+   "tumours": 34,
+   "detected": 27,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.3,
+    "ci_low": 0.0,
+    "ci_high": 0.6
+   },
+   "per_tumour_dice": {
+    "mean": 0.5425084002327994,
+    "ci_low": 0.4251319991654269,
+    "ci_high": 0.6539857602376605
+   },
+   "per_tumour_dice_small": 0.2475565660867501,
+   "per_patient_dice": 0.575483882009207,
+   "patients": 10
+  },
+  "ctformer": {
+   "tumours": 34,
+   "detected": 28,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.5,
+    "ci_low": 0.1,
+    "ci_high": 0.9
+   },
+   "per_tumour_dice": {
+    "mean": 0.5851923011514124,
+    "ci_low": 0.4606692036790335,
+    "ci_high": 0.7001121117023779
+   },
+   "per_tumour_dice_small": 0.3071155365790477,
+   "per_patient_dice": 0.5993665495638407,
+   "patients": 10
+  },
+  "corediff": {
+   "tumours": 34,
+   "detected": 28,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.5,
+    "ci_low": 0.0,
+    "ci_high": 1.1
+   },
+   "per_tumour_dice": {
+    "mean": 0.5843520296208384,
+    "ci_low": 0.4655018441941379,
+    "ci_high": 0.698531911669698
+   },
+   "per_tumour_dice_small": 0.30958280996295445,
+   "per_patient_dice": 0.5934856376960911,
+   "patients": 10
+  },
+  "ct_mamba_control": {
+   "tumours": 34,
+   "detected": 28,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.7,
+    "ci_low": 0.2,
+    "ci_high": 1.3
+   },
+   "per_tumour_dice": {
+    "mean": 0.5820444003002464,
+    "ci_low": 0.46282587684419285,
+    "ci_high": 0.6954451025454752
+   },
+   "per_tumour_dice_small": 0.3105049526420799,
+   "per_patient_dice": 0.5936304444269439,
+   "patients": 10
+  },
+  "ct_mamba_refiner": {
+   "tumours": 34,
+   "detected": 28,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.5,
+    "ci_low": 0.1,
+    "ci_high": 0.9
+   },
+   "per_tumour_dice": {
+    "mean": 0.5818891710333867,
+    "ci_low": 0.4616887729823505,
+    "ci_high": 0.6934209028419791
+   },
+   "per_tumour_dice_small": 0.3060786122929827,
+   "per_patient_dice": 0.5982028734802638,
+   "patients": 10
+  },
+  "ct_mamba_refiner25d": {
+   "tumours": 34,
+   "detected": 28,
+   "small": 9,
+   "small_detected": 5,
+   "fp_per_patient": {
+    "mean": 0.6,
+    "ci_low": 0.2,
+    "ci_high": 1.0
+   },
+   "per_tumour_dice": {
+    "mean": 0.5846232645878618,
+    "ci_low": 0.46663511507743743,
+    "ci_high": 0.6962321035222861
+   },
+   "per_tumour_dice_small": 0.3064648629997964,
+   "per_patient_dice": 0.6030604398293519,
+   "patients": 10
+  }
+ },
+ "paired": {
+  "dice_ct_mamba_refiner25d_vs_ct_mamba_control": {
+   "mean_difference": 0.002578864287615439,
+   "ci_low": -0.0030104407499105283,
+   "ci_high": 0.008522477205532444,
+   "wilcoxon_p": 0.5237341899765697,
+   "significant": false
+  },
+  "fp_ct_mamba_refiner25d_vs_ct_mamba_control": {
+   "mean_difference": -0.1,
+   "ci_low": -0.4,
+   "ci_high": 0.2,
+   "wilcoxon_p": 1.0,
+   "significant": false
+  },
+  "dice_ct_mamba_refiner25d_vs_ct_mamba_refiner": {
+   "mean_difference": 0.002734093554475098,
+   "ci_low": -0.00045371908918225245,
+   "ci_high": 0.006257009703197689,
+   "wilcoxon_p": 0.26450786232203294,
+   "significant": false
+  },
+  "fp_ct_mamba_refiner25d_vs_ct_mamba_refiner": {
+   "mean_difference": 0.1,
+   "ci_low": -0.2,
+   "ci_high": 0.4,
+   "wilcoxon_p": 1.0,
+   "significant": false
+  },
+  "dice_ct_mamba_refiner25d_vs_ct_mamba": {
+   "mean_difference": 0.04211486435506241,
+   "ci_low": 0.010384650157018824,
+   "ci_high": 0.08434624320757166,
+   "wilcoxon_p": 0.02277772703207994,
+   "significant": true
+  },
+  "fp_ct_mamba_refiner25d_vs_ct_mamba": {
+   "mean_difference": 0.3,
+   "ci_low": 0.0,
+   "ci_high": 0.6,
+   "wilcoxon_p": 0.25,
+   "significant": false
+  },
+  "dice_ct_mamba_refiner25d_vs_ctformer": {
+   "mean_difference": -0.000569036563550637,
+   "ci_low": -0.0071274414353390166,
+   "ci_high": 0.006023785555457118,
+   "wilcoxon_p": 0.7326735003837643,
+   "significant": false
+  },
+  "fp_ct_mamba_refiner25d_vs_ctformer": {
+   "mean_difference": 0.1,
+   "ci_low": -0.2,
+   "ci_high": 0.4,
+   "wilcoxon_p": 1.0,
+   "significant": false
+  },
+  "dice_ct_mamba_refiner25d_vs_corediff": {
+   "mean_difference": 0.0002712349670234275,
+   "ci_low": -0.005714030301039821,
+   "ci_high": 0.006484841590894705,
+   "wilcoxon_p": 0.7498782331919757,
+   "significant": false
+  },
+  "fp_ct_mamba_refiner25d_vs_corediff": {
+   "mean_difference": 0.1,
+   "ci_low": -0.2,
+   "ci_high": 0.4,
+   "wilcoxon_p": 1.0,
+   "significant": false
+  },
+  "dice_ct_mamba_refiner25d_vs_quarter": {
+   "mean_difference": 0.019714235893680897,
+   "ci_low": 0.0038420185372911187,
+   "ci_high": 0.0395813900486933,
+   "wilcoxon_p": 0.12209034758061738,
+   "significant": false
+  },
+  "fp_ct_mamba_refiner25d_vs_quarter": {
+   "mean_difference": 0.1,
+   "ci_low": -0.2,
+   "ci_high": 0.4,
+   "wilcoxon_p": 1.0,
+   "significant": false
+  },
+  "dice_ct_mamba_refiner25d_vs_full": {
+   "mean_difference": 0.002822859995610468,
+   "ci_low": -0.007726915490974943,
+   "ci_high": 0.015604516028945598,
+   "wilcoxon_p": 0.819868406008273,
+   "significant": false
+  },
+  "fp_ct_mamba_refiner25d_vs_full": {
+   "mean_difference": 0.0,
+   "ci_low": -0.3,
+   "ci_high": 0.3,
+   "wilcoxon_p": 1.0,
+   "significant": false
+  },
+  "psnr_ct_mamba_refiner25d_vs_quarter_dose": {
+   "mean_difference": 5.1684634967319125,
+   "ci_low": 5.14712876240086,
+   "ci_high": 5.189230067314967,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "ssim_ct_mamba_refiner25d_vs_quarter_dose": {
+   "mean_difference": 0.04438979429199169,
+   "ci_low": 0.04385785506281629,
+   "ci_high": 0.04492038201193833,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "rmse_ct_mamba_refiner25d_vs_quarter_dose": {
+   "mean_difference": -11.122666280372945,
+   "ci_low": -11.414559705364049,
+   "ci_high": -10.84373247877366,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "psnr_ct_mamba_refiner25d_vs_ct_mamba": {
+   "mean_difference": 0.2185691995870003,
+   "ci_low": 0.21506994275196137,
+   "ci_high": 0.2219732557420075,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "ssim_ct_mamba_refiner25d_vs_ct_mamba": {
+   "mean_difference": 0.004951051407955297,
+   "ci_low": 0.004876527647037804,
+   "ci_high": 0.005023303858461568,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "rmse_ct_mamba_refiner25d_vs_ct_mamba": {
+   "mean_difference": -0.33475517689635365,
+   "ci_low": -0.3395854952135463,
+   "ci_high": -0.32984544603885363,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "psnr_ct_mamba_refiner25d_vs_ctformer": {
+   "mean_difference": 1.0757929636333545,
+   "ci_low": 1.069063582559651,
+   "ci_high": 1.0824295789245422,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "ssim_ct_mamba_refiner25d_vs_ctformer": {
+   "mean_difference": 0.014529213940893468,
+   "ci_low": 0.014355979738630443,
+   "ci_high": 0.014696007537132755,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "rmse_ct_mamba_refiner25d_vs_ctformer": {
+   "mean_difference": -1.7648450759741472,
+   "ci_low": -1.7953467416813724,
+   "ci_high": -1.7354007656823855,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "psnr_ct_mamba_refiner25d_vs_corediff": {
+   "mean_difference": 0.35838070487670964,
+   "ci_low": 0.3517532784727972,
+   "ci_high": 0.3651614291088438,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "ssim_ct_mamba_refiner25d_vs_corediff": {
+   "mean_difference": 0.0008380804447105259,
+   "ci_low": 0.0006195137387170391,
+   "ci_high": 0.001054785888931626,
+   "wilcoxon_p": 1.4755423238437433e-22,
+   "significant": true
+  },
+  "rmse_ct_mamba_refiner25d_vs_corediff": {
+   "mean_difference": -0.5558254370314583,
+   "ci_low": -0.5656367988626864,
+   "ci_high": -0.5461724578859314,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "psnr_ct_mamba_refiner25d_vs_ct_mamba_control": {
+   "mean_difference": 0.22287023466980432,
+   "ci_low": 0.21958305042549503,
+   "ci_high": 0.22613113131855062,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "ssim_ct_mamba_refiner25d_vs_ct_mamba_control": {
+   "mean_difference": 0.005044006480409357,
+   "ci_low": 0.004960814412203657,
+   "ci_high": 0.00512580744459716,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "rmse_ct_mamba_refiner25d_vs_ct_mamba_control": {
+   "mean_difference": -0.3426547771281963,
+   "ci_low": -0.3478230598945559,
+   "ci_high": -0.3374713921369571,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "psnr_ct_mamba_refiner25d_vs_ct_mamba_refiner": {
+   "mean_difference": 0.2196475016406219,
+   "ci_low": 0.2161278458656227,
+   "ci_high": 0.22305750337795408,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "ssim_ct_mamba_refiner25d_vs_ct_mamba_refiner": {
+   "mean_difference": 0.005046182880626161,
+   "ci_low": 0.004970346904538863,
+   "ci_high": 0.005121282974611146,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "rmse_ct_mamba_refiner25d_vs_ct_mamba_refiner": {
+   "mean_difference": -0.33642715888520947,
+   "ci_low": -0.3413130316828919,
+   "ci_high": -0.33157219512380753,
+   "wilcoxon_p": 7.189158318658634e-88,
+   "significant": true
+  },
+  "dice_ct_mamba_control_vs_ct_mamba": {
+   "mean_difference": 0.03953600006744697,
+   "ci_low": 0.008937926301021856,
+   "ci_high": 0.08080973160598381,
+   "wilcoxon_p": 0.058754196392100354,
+   "significant": false
+  }
+ },
+ "criteria": {
+  "a": {
+   "rule": "L506 PSNR >= 29.42",
+   "value": 29.637244274164342,
+   "pass": true
+  },
+  "b": {
+   "rule": "per-tumour Dice >= best baseline (CTformer 0.5852)",
+   "value": 0.5846232645878618,
+   "pass": false
+  },
+  "c": {
+   "rule": "per-tumour Dice > control (0.5820)",
+   "value": 0.5846232645878618,
+   "pass": true
+  },
+  "d": {
+   "rule": "refiner vs control AND vs best baseline: Wilcoxon p<0.05 and CI excludes 0, in the refiner's favour",
+   "vs_control": {
+    "mean_difference": 0.002578864287615439,
+    "ci_low": -0.0030104407499105283,
+    "ci_high": 0.008522477205532444,
+    "wilcoxon_p": 0.5237341899765697,
+    "significant": false
+   },
+   "vs_best_baseline": {
+    "mean_difference": -0.000569036563550637,
+    "ci_low": -0.0071274414353390166,
+    "ci_high": 0.006023785555457118,
+    "wilcoxon_p": 0.7326735003837643,
+    "significant": false
+   },
+   "pass": false
+  },
+  "e": {
+   "rule": "FP/patient <= CT-Mamba (0.30)",
+   "value": 0.6,
+   "pass": false
+  }
+ },
+ "verdict": "NOT A WIN"
+}

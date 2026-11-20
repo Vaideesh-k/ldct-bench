@@ -1,33 +1,39 @@
-# Morning report — final week, night of 18/19 Nov 2026
+# Status report — final week, 20 Nov 2026 evening
 
-Branch **`final-week`** (from `autonomous-nov12`, pushed after every step). Full log: docs/PROGRESS.md.
+Branch **`final-week`** (pushed after every step). Full log: docs/PROGRESS.md.
 
-## Done tonight
+## Done
 | step | status |
 |---|---|
-| 1 success criteria | **DONE**, committed before any result (docs/success_criteria.md, 4415a52) |
-| 3 refiner code + tests | **DONE**: `ct_mamba_refiner` (2D U-Net 32/64/128/256, zero-init residual on CT-Mamba, 2.14 M parameters), shared sampler/loss, 26 checks pass (Mac + DGX) |
-| 4 control | **RUNNING**, job 39377 on a 4g.20gb MIG slice, 30,000 iterations at ~1.35 s → ~11 h |
-| 2 precompute | written, **queued** (39379); needs ~5 GB of disk, see "Blocker" |
-| 3 refiner training | **queued** (39380, after the precompute) |
-| 5 first evaluation | jobs queued (39378 control, 39381 refiner): L506 + LiTS images, nnU-Net detection; then `scripts/final_stats.py` (bootstrap CIs, paired tests, criteria verdict) |
-| 6 extended test set | mask scan of patients 51-130 **running/done** (39373); selection rule committed before conversion (scripts/make_lits_ext_split.py); conversion + evaluation jobs written |
-| 7 report material | figure + training-curve script written (scripts/make_figures.py); tables come from final_stats.py |
+| 1 success criteria | **DONE** before any result (docs/success_criteria.md) |
+| 2 Stage A | **DONE** inside job 42024, on node-local scratch (home stayed at 40 GB) |
+| 3 refiner (2D) | **DONE**, 30,000 iterations |
+| 3b refiner 2.5D (owner decision 20 Nov, before results) | **DONE**, 30,000 iterations |
+| 4 control | **DONE** (job 39377) and evaluated |
+| 5 first evaluation | **DONE**: dgx_results/final_existing10{,_25d}.md |
+| 6 extended test set | split committed; conversion + evaluation **next** |
+| 7 report material | deck updated with results; figures after step 6 |
 
-## Two things that threaten the deadline
-1. **Only ONE GPU job at a time on this account** (any MIG size; association limit gres/gpu=1).
-   Refiner and control cannot run in parallel, so everything GPU runs in one chain:
-   control (~11 h) → control eval (~1.5 h) → precompute (~5 h) → refiner (~2 h) → refiner eval
-   → extended-set eval (~5 h). First evaluation expected about 20 Nov morning if the 4g slice
-   keeps being free between jobs. Full A100s were all busy (39 jobs pending).
-2. **Disk.** Home is at 39 of 50 GB; the keep-10-GB-free rule leaves ~1 GB, and the next jobs need
-   ~5 GB (precompute) + ~2 GB (each new model's test predictions) + ~3 GB (extended set). Every
-   job checks the disk first and stops cleanly instead of breaking the rule.
+## First evaluation (10 LiTS patients, 34 tumours; L506) — preliminary
+| input | L506 PSNR | SSIM | detected | < 10 mm | FP/pt | per-tumour Dice |
+|---|---|---|---|---|---|---|
+| CT-Mamba | 29.42 | 0.8776 | 27/34 | 5/9 | 0.30 | 0.543 |
+| CTformer | 28.56 | 0.8680 | 28/34 | 5/9 | 0.50 | 0.585 |
+| CoreDiff | 29.28 | 0.8817 | 28/34 | 5/9 | 0.50 | 0.584 |
+| control | 29.41 | 0.8775 | 28/34 | 5/9 | 0.70 | 0.582 |
+| refiner 2D | 29.42 | 0.8775 | 28/34 | 5/9 | 0.50 | 0.582 |
+| **refiner 2.5D** | **29.64** | **0.8826** | 28/34 | 5/9 | 0.60 | 0.585 |
 
-## What I need from you (one line answers are enough)
-- **OK to delete these on the DGX** once the laptop copy has them (I compare sizes first):
-  `data/nnunet/raw`, `data/nnunet/preprocessed` (both rebuildable from data/lits),
-  `runs/ctformer/predictions/lits`, `runs/corediff/predictions/lits` (detection already scored),
-  `runs/ct_mamba/latest.pth` (resume file of a finished run). That frees ~8 GB. My session's
-  safety check refused the delete without your explicit OK. Reply "ok delete" and I do it.
-- Keep the laptop copy running until it finishes (it resumes on its own).
+Criteria a / b / c / d / e:
+- refiner 2D: FAIL / FAIL / FAIL / FAIL / FAIL — **not a win** (it stays at CT-Mamba's output).
+- refiner 2.5D: **PASS** / FAIL (by 0.0006) / PASS (not significant) / FAIL / FAIL — **not a win**.
+
+Plain reading: the 2.5D refiner is the best denoiser of the project on image quality (+0.22 dB
+over CT-Mamba, significant), but no denoiser changes tumour detection on this set: every trained
+model finds the same 28 of 34 tumours and the same 5 of 9 small ones, and the Dice differences are
+within noise.
+
+## Next
+1. Extended set (20 patients, 106 tumours, 58 < 10 mm): conversion on node scratch, then
+   detection for all inputs incl. both refiners — the final verdict per the criteria.
+2. Figures + report tables from final_stats.py on the extended set.
