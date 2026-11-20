@@ -332,3 +332,25 @@ p < 0.05 AND bootstrap 95% CI excluding 0; hybrid 50-epoch runs dropped (out of 
   are now excluded (7 such patients, incl. 117 and 108 with 66).
 - Conversion (slurm/lits_ext_prep.sbatch, ~1.5 GB) NOT submitted yet: home is at ~39 GiB, the
   conversion would pass the keep-10-GB-free line. Waiting for the disk decision.
+
+## 19-20 Nov
+- **Control 39377 COMPLETED** (11 h 3 min, 30,000 iterations, best window loss 0.004045).
+  The chained jobs stopped cleanly at the disk guards as designed: eval_control 39378 (DISK_STOP,
+  home 39 GB) and stage_a 39379 (stopped at 1,000/11,226 slices, home 39.9 > 39.7 GB);
+  refiner 39380 / eval_refiner 39381 then left the queue.
+- **Disk solution without deleting anything:** the compute nodes have 237 GB free on node-local
+  /tmp (outside the home quota). New `slurm/refiner_pipeline.sbatch` runs control evaluation,
+  Stage A, refiner training and evaluation in ONE GPU job and keeps every large temporary file
+  (Stage A ~6 GB, predictions ~2 GB per model, nnU-Net input copies) in /tmp/ldct_<user>_<job>,
+  removed on exit. Supporting changes: `LDCT_STAGE_A_ROOT` in ldct/tumour_train.stage_a_path,
+  free-space guard on the scratch in precompute_stage_a.py, `SETNAME`/`NNWORK` in detect_all.sbatch.
+- **Owner decision (20 Nov, before any refiner result): add a 2.5D refiner variant**
+  (`refiner25d`): same U-Net, same loss, data, patches (identical sampler draws) and pixel
+  budget, but input [noisy z-1, noisy z, noisy z+1, Stage A] (in_channels 4). Reason: adjacent
+  slices add real information (independent noise, shared anatomy) that should raise PSNR;
+  CoreDiff, which uses context slices, has the best SSIM. The planned 2D refiner stays the main,
+  pre-committed experiment; the 2.5D model is reported as a second variant against the same
+  criteria. Concern discussed with the owner: the refiner trains on 128 patches but runs on
+  512 slices and GroupNorm statistics depend on image size; if its PSNR drops, tiled inference
+  is the first fix (inference only).
+- SUBMITTED 20 Nov: **refiner_pipeline = job 42024** (control eval -> Stage A -> refiner -> refiner eval -> refiner25d -> refiner25d eval). tests/check_refiner.py (36 checks incl. 2.5D + scratch path) ALL PASSED on a DGX node.

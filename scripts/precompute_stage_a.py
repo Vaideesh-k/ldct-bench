@@ -10,6 +10,7 @@ same weights. Same tiled inference as scripts/predict.py (64x64 tiles, stride 32
 Resumable (existing files are skipped). Stops before the home folder passes --max-used-gb.
 """
 import argparse
+import shutil
 import json
 import os
 import subprocess
@@ -68,7 +69,12 @@ def main():
         if n % 500 == 0:
             gb = used_gb()
             print(f"{n}/{len(todo)} slices, {time.time() - t0:.0f}s, home {gb:.1f} GB", flush=True)
-            if gb > args.max_used_gb:
+            scratch = os.environ.get("LDCT_STAGE_A_ROOT")
+            if scratch:   # writing to node-local scratch: home does not grow; keep 10 GB free there
+                free = shutil.disk_usage(scratch).free / 1e9
+                if free < 10:
+                    raise SystemExit(f"STOP: only {free:.0f} GB free in {scratch}")
+            elif gb > args.max_used_gb:
                 raise SystemExit(f"STOP: home uses {gb:.1f} GB > {args.max_used_gb}; resubmit after freeing space")
         x = torch.from_numpy(load_input([low]))[None].to(device)
         out = unit_to_hu(denoise_slice(model, x, cfg)[0, 0].float().cpu().numpy())

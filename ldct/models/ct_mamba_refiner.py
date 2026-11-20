@@ -2,7 +2,8 @@
 that adds a correction to the Stage-A image.
 
     input  (B, 2, H, W) in [0, 1]: channel 0 = noisy quarter dose, channel 1 = Stage-A output
-    output (B, 1, H, W) = Stage-A output + U-Net residual
+           2.5D variant (in_channels=4): [noisy z-1, noisy z, noisy z+1, Stage A]
+    output (B, 1, H, W) = Stage-A output (always the LAST input channel) + U-Net residual
 
 Stage B: 4 levels with 32/64/128/256 channels, each level 2 x (3x3 conv + GroupNorm + SiLU),
 max-pool down, bilinear upsample + 3x3 conv up, skip connections (concatenation), a final
@@ -40,6 +41,7 @@ class Refiner(nn.Module):
     def __init__(self, channels=(32, 64, 128, 256), in_channels=2):
         super().__init__()
         c = list(channels)
+        self.in_channels = in_channels
         self.downs = nn.ModuleList([_block(in_channels, c[0])] +
                                    [_block(c[i - 1], c[i]) for i in range(1, len(c))])
         self.ups = nn.ModuleList([Up(c[i], c[i - 1]) for i in range(len(c) - 1, 0, -1)])
@@ -58,10 +60,10 @@ class Refiner(nn.Module):
         return self.head(x)
 
     def forward(self, x):
-        if x.shape[1] != 2:
-            raise ValueError(f"the refiner takes 2 channels [noisy, Stage A], got {x.shape[1]}")
-        return x[:, 1:2] + self.residual(x)
+        if x.shape[1] != self.in_channels:
+            raise ValueError(f"the refiner takes {self.in_channels} channels [noisy slice(s), Stage A], got {x.shape[1]}")
+        return x[:, -1:] + self.residual(x)
 
 
-def build(channels=(32, 64, 128, 256)):
-    return Refiner(tuple(channels))
+def build(channels=(32, 64, 128, 256), in_channels=2):
+    return Refiner(tuple(channels), in_channels)

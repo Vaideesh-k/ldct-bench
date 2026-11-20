@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ldct.config import load_config, resolve   # noqa: E402
-from ldct.data import hu_to_unit, load_input, test_set_pairs, unit_to_hu   # noqa: E402
+from ldct.data import hu_to_unit, load_input, neighbours, test_set_pairs, unit_to_hu   # noqa: E402
 from ldct.infer import denoise_slice   # noqa: E402
 from ldct.models import build_model   # noqa: E402
 from ldct.runtime import device_name, synchronize   # noqa: E402
@@ -42,7 +42,9 @@ def main():
     cfg = load_config("ct_mamba")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ck = torch.load(resolve(os.path.join("runs", args.run, args.checkpoint)), map_location=device)
-    model = build_model("ct_mamba_refiner").to(device)
+    margs = ck.get("model_args") or {}
+    model = build_model("ct_mamba_refiner", **margs).to(device)
+    context = (int(margs.get("in_channels", 2)) - 2) // 2      # 2.5D: in_channels = 2 * context + 2
     model.load_state_dict(ck["model"])
     model.eval()
     print(f"refiner {args.run}/{args.checkpoint} (iteration {ck.get('iteration')}, loss {ck.get('train_loss')})", flush=True)
@@ -62,9 +64,10 @@ def main():
                 diffs.append(float(np.abs(live - np.load(os.path.join(a_dir, patient, f"{name}.npy"))).max()))
             print(f"{set_name}: live CT-Mamba vs stored Stage A, max |diff| per slice (HU): {[round(d, 4) for d in diffs]}", flush=True)
         seconds = []
-        for low, _, patient, name in tqdm(pairs, desc=set_name):
+        inputs = neighbours(pairs, context)
+        for (low, _, patient, name), lows in tqdm(list(zip(pairs, inputs)), desc=set_name):
             a = np.load(os.path.join(a_dir, patient, f"{name}.npy")).astype(np.float32)
-            x = torch.from_numpy(np.stack([load_input([low])[0], hu_to_unit(a)]))[None].to(device)
+            x = torch.from_numpy(np.concatenate([load_input(lows), hu_to_unit(a)[None]]))[None].to(device)
             synchronize(device); t = time.perf_counter()
             with torch.no_grad():
                 y = model(x)

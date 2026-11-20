@@ -24,7 +24,8 @@ export nnUNet_results=$HOME/ldct-bench/runs/nnunet
 export nnUNet_n_proc_DA=4 OMP_NUM_THREADS=4
 TRAINER=${TRAINER:-nnUNetTrainer_250epochs}
 # Extended test set (final-week step 6): LITS=data/lits_ext SPLIT=configs/lits_ext_split.json TAG=ext_
-# PRED_ROOT=scratch_ext  (model predictions in $PRED_ROOT/<model>/lits_ext, deleted after scoring)
+# PRED_ROOT=scratch_ext  (model predictions in $PRED_ROOT/<model>/$SETNAME, default lits_ext, deleted after scoring)
+# NNWORK=<dir>  temporary nnU-Net input copies (default data/nnunet; node-local /tmp keeps home small)
 LITS=${LITS:-data/lits}
 SPLIT=${SPLIT:-configs/lits_split.json}
 TAG=${TAG:-}
@@ -35,7 +36,7 @@ du -sh ~ | tail -1
 
 run_one() {   # name, extra args for prep_nnunet.py
   local name=$1; shift
-  local img=data/nnunet/test_$TAG$name
+  local img=${NNWORK:-data/nnunet}/test_$TAG$name
   local out=runs/nnunet/pred_test_$TAG$name
   if [ ! -f "results/detect_$TAG$name.json" ]; then
     rm -rf "$img" "$out"
@@ -50,7 +51,7 @@ run_one() {   # name, extra args for prep_nnunet.py
 run_one full
 run_one quarter --from-predictions "$LITS" --from-kind quarter
 for m in $MODELS; do
-  if [ -n "$PRED_ROOT" ]; then pd="$PRED_ROOT/$m/lits_ext"; else pd="runs/$m/predictions/lits"; fi
+  if [ -n "$PRED_ROOT" ]; then pd="$PRED_ROOT/$m/${SETNAME:-lits_ext}"; else pd="runs/$m/predictions/lits"; fi
   if [ -d "$pd" ]; then
     run_one "$m" --from-predictions "$pd"
   else

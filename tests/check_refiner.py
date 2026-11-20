@@ -108,7 +108,7 @@ lits_items = [ds[i] for i in range(1, 4000, 2)]
 share = np.mean([float(it[2].any()) for it in lits_items])
 check(f"about 30% of LiTS patches contain tumour (got {share:.2f})", 0.25 <= share <= 0.45)
 check("masks only where tumour (patches from tumour-free patient have empty masks)",
-      not any(ds._cut(ds.lits[j], ds.lits_masks[j], np.random.default_rng(j), False)[2].any()
+      not any(ds._cut(ds.lits[j], ds.lits_in[j], ds.lits_masks[j], np.random.default_rng(j), False)[2].any()
               for j in range(len(ds.lits)) if "lits_001" in ds.lits[j][0]))
 try:
     MixedPatches(mayo, ["L067"], lits, ["lits_000"], locked=["lits_000"]); check("locked LiTS test patient refused", False)
@@ -119,8 +119,32 @@ try:
 except ValueError:
     check("L506 refused", True)
 check("Stage-A path is <patient>/ct_mamba/<name>", stage_a_path("/a/p/quarter/x.npy") == "/a/p/ct_mamba/x.npy")
+os.environ["LDCT_STAGE_A_ROOT"] = "/scratch/s"
+check("Stage-A path under $LDCT_STAGE_A_ROOT/<patient>/ct_mamba/<name>", stage_a_path("/a/p/quarter/x.npy") == "/scratch/s/p/ct_mamba/x.npy")
+del os.environ["LDCT_STAGE_A_ROOT"]
 ctl = MixedPatches(mayo, ["L067"], lits, ["lits_000"], patch=64, n_items=10, stage_a=False)
 check("control item: 1 input channel", ctl[1][0].shape[0] == 1)
+
+# ---- 2.5D variant: [z-1, z, z+1, Stage A] ----
+ds3 = MixedPatches(mayo, ["L067"], lits, ["lits_000", "lits_001"], patch=64, n_items=4000,
+                   tumour_share=0.3, stage_a=True, seed=0, locked=["lits_002"], context=1)
+same_patch = all(torch.equal(ds3[i][0][1], ds[i][0][0]) and torch.equal(ds3[i][0][3], ds[i][0][1]) and
+                 torch.equal(ds3[i][1], ds[i][1]) and torch.equal(ds3[i][2], ds[i][2]) for i in range(40))
+check("2.5D item: 4 input channels", tuple(ds3[1][0].shape) == (4, 64, 64))
+check("2.5D: centre slice, Stage A, target and mask identical to the 2D sampler (same patches)", same_patch)
+nb = ds3.mayo_in
+check("2.5D: neighbours are z-1/z/z+1 of the same patient, clamped at the edges",
+      nb[0] == [ds3.mayo[0][0], ds3.mayo[0][0], ds3.mayo[1][0]] and nb[1] == [ds3.mayo[0][0], ds3.mayo[1][0], ds3.mayo[2][0]]
+      and nb[-1][2] == ds3.mayo[-1][0])
+check("2.5D: LiTS neighbours never cross patients",
+      all(all(os.path.dirname(f) == os.path.dirname(pr[0]) for f in lows) for pr, lows in zip(ds3.lits, ds3.lits_in)))
+net4 = Refiner(in_channels=4)
+x4 = torch.rand(2, 4, 64, 64)
+check("2.5D model: untrained output == Stage A (last channel) EXACTLY", torch.equal(net4(x4), x4[:, 3:4]))
+try:
+    net4(torch.rand(1, 2, 64, 64)); check("2.5D model refuses 2-channel input", False)
+except ValueError:
+    check("2.5D model refuses 2-channel input", True)
 
 # ---- end-to-end smoke of the training script (refiner, CPU) ----
 cfg = os.path.join(tmp, "cfg.yaml")
@@ -143,6 +167,7 @@ window: 10
 workers: 0
 modes:
   refiner: {{model: ct_mamba_refiner, patch: 64, batch: 4, stage_a: true}}
+  refiner25d: {{model: ct_mamba_refiner, model_args: {{in_channels: 4}}, context: 1, patch: 64, batch: 4, stage_a: true}}
 """)
 env = dict(os.environ, PYTHONPATH=ROOT)
 r = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "train_tumour.py"), "--mode", "refiner",
@@ -154,6 +179,15 @@ check("training script runs and writes best.pth + 4 log rows",
       r.returncode == 0 and os.path.exists(os.path.join(run_dir, "best.pth")) and
       len(open(os.path.join(run_dir, "train_log.csv")).read().strip().splitlines()) == 5)
 import shutil
+shutil.rmtree(run_dir, ignore_errors=True)
+r = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "train_tumour.py"), "--mode", "refiner25d",
+                    "--config", cfg, "--run", "check_refiner25d_tmp", "--smoke", "--device", "cpu"],
+                   capture_output=True, text=True, cwd=ROOT, env=env)
+print(r.stdout[-400:], r.stderr[-1500:])
+run_dir = os.path.join(ROOT, "runs", "check_refiner25d_tmp_smoke")
+ok = r.returncode == 0 and os.path.exists(os.path.join(run_dir, "best.pth"))
+check("2.5D training script runs; checkpoint records in_channels=4",
+      ok and torch.load(os.path.join(run_dir, "best.pth"), map_location="cpu")["model_args"] == {"in_channels": 4})
 shutil.rmtree(run_dir, ignore_errors=True)
 shutil.rmtree(tmp, ignore_errors=True)
 

@@ -37,7 +37,7 @@ def load_cfg(path):
 
 def build(mode, cfg, device):
     m = cfg["modes"][mode]
-    model = build_model(m["model"]).to(device)
+    model = build_model(m["model"], **m.get("model_args", {})).to(device)
     if m.get("init"):
         ck = torch.load(resolve(m["init"]), map_location=device)
         model.load_state_dict(ck["model"])
@@ -59,7 +59,7 @@ def save(obj, path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", required=True, choices=["refiner", "control"])
+    ap.add_argument("--mode", required=True, choices=["refiner", "refiner25d", "control"])
     ap.add_argument("--config", default="configs/tumour_train.yaml")
     ap.add_argument("--run")
     ap.add_argument("--iterations", type=int)
@@ -69,7 +69,7 @@ def main():
     args = ap.parse_args()
     cfg = load_cfg(args.config)
     m = cfg["modes"][args.mode]
-    run = args.run or ("ct_mamba_refiner" if args.mode == "refiner" else "ct_mamba_control")
+    run = args.run or f"ct_mamba_{args.mode}"
     iters, window = args.iterations or cfg["iterations"], cfg["window"]
     if args.smoke:
         run, iters, window = run + "_smoke", 40, 10
@@ -88,7 +88,7 @@ def main():
                         lits_train_patients(resolve(cfg["lits_split"])), patch=m["patch"],
                         n_items=iters * m["batch"], tumour_share=cfg["tumour_share"],
                         stage_a=m["stage_a"], dilate=cfg["dilate"], seed=cfg["seed"],
-                        locked=[f"lits_{k:03d}" for k in split["test"]])
+                        locked=[f"lits_{k:03d}" for k in split["test"]], context=int(m.get("context", 0)))
     print(f"mode {args.mode}: model {m['model']}, {m['batch']} x {m['patch']}^2 patches/step "
           f"({m['batch'] * m['patch'] ** 2:,} px), {iters} iterations, "
           f"{len(data.mayo)} Mayo + {len(data.lits)} LiTS train slices ({len(data.tumour_slices)} with tumour)", flush=True)
@@ -170,7 +170,7 @@ def main():
             if wl < best_loss:
                 best_loss = wl
                 save({"model": model.state_dict(), "epoch": it, "iteration": it, "train_loss": wl,
-                      "model_args": {}, "mode": args.mode}, best)
+                      "model_args": m.get("model_args", {}), "mode": args.mode}, best)
             save({"model": model.state_dict(), "optimizer": opt.state_dict(), "scheduler": sched.state_dict(),
                   "iteration": it, "best_loss": best_loss}, latest)
             print(f"it {it}/{iters}: window loss {wl:.6f} (Mayo L1 {row['loss_mayo']:.6f}, LiTS L1 {row['loss_lits']:.6f}, "

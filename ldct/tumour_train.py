@@ -27,14 +27,19 @@ import torch
 from scipy.ndimage import binary_dilation
 from torch.utils.data import Dataset
 
-from ldct.data import hu_to_unit, list_pairs
+from ldct.data import hu_to_unit, list_pairs, neighbours
 from ldct.lesion import mask_path
 
 STAGE_A = "ct_mamba"            # folder name of the precomputed Stage-A slices
 
 
 def stage_a_path(low_path, folder=STAGE_A):
+    """<patient>/<folder>/<name> next to the slice, or under $LDCT_STAGE_A_ROOT/<patient>/<folder>/
+    when that is set (node-local scratch inside a job, so the 50 GB home quota is not touched)."""
     d, name = os.path.split(low_path)
+    root = os.environ.get("LDCT_STAGE_A_ROOT")
+    if root:
+        return os.path.join(root, os.path.basename(os.path.dirname(d)), folder, name)
     return os.path.join(os.path.dirname(d), folder, name)
 
 
@@ -63,12 +68,15 @@ def lits_train_patients(split_file, prefix="lits_"):
 class MixedPatches(Dataset):
     def __init__(self, mayo_root, mayo_patients, lits_root, lits_patients, patch=128,
                  n_items=10 ** 9, tumour_share=0.3, stage_a=False, dilate=3, seed=0,
-                 locked=()):
+                 locked=(), context=0):
         bad = set(lits_patients) & set(locked)
         if bad or "L506" in mayo_patients:
             raise ValueError(f"locked test patients in the training data: {sorted(bad) or 'L506'}")
         self.mayo = list_pairs(mayo_root, mayo_patients)
         self.lits = list_pairs(lits_root, lits_patients)
+        # noisy input slices per pair: [z-context .. z .. z+context], clamped at a patient's edges
+        self.context = context
+        self.mayo_in, self.lits_in = neighbours(self.mayo, context), neighbours(self.lits, context)
         self.patch, self.n_items, self.share = patch, n_items, tumour_share
         self.stage_a, self.dilate, self.seed = stage_a, dilate, seed
         self.lits_masks = [mask_path(p[0]) for p in self.lits]
@@ -86,7 +94,7 @@ class MixedPatches(Dataset):
     def __len__(self):
         return self.n_items
 
-    def _cut(self, pair, mask_file, rng, centre_on_tumour):
+    def _cut(self, pair, lows, mask_file, rng, centre_on_tumour):
         low = np.load(pair[0], mmap_mode="r")
         h, w = low.shape
         P = self.patch
@@ -99,7 +107,7 @@ class MixedPatches(Dataset):
         else:
             r, c = int(rng.integers(0, h - P + 1)), int(rng.integers(0, w - P + 1))
         sl = (slice(r, r + P), slice(c, c + P))
-        chans = [np.asarray(low[sl], np.float32)]
+        chans = [np.asarray(np.load(f, mmap_mode="r")[sl], np.float32) for f in lows]
         if self.stage_a:
             chans.append(np.asarray(np.load(stage_a_path(pair[0]), mmap_mode="r")[sl], np.float32))
         x = hu_to_unit(np.stack(chans))
@@ -111,14 +119,15 @@ class MixedPatches(Dataset):
     def __getitem__(self, i):
         rng = np.random.default_rng((self.seed, int(i)))
         if i % 2 == 0:                                   # Mayo
-            pair, mfile, centre = self.mayo[rng.integers(len(self.mayo))], None, False
+            k = int(rng.integers(len(self.mayo)))
+            pair, lows, mfile, centre = self.mayo[k], self.mayo_in[k], None, False
         elif rng.random() < self.share:                  # LiTS, centred on a tumour
             j = self.tumour_slices[rng.integers(len(self.tumour_slices))]
-            pair, mfile, centre = self.lits[j], self.lits_masks[j], True
+            pair, lows, mfile, centre = self.lits[j], self.lits_in[j], self.lits_masks[j], True
         else:                                            # LiTS, anywhere
             j = int(rng.integers(len(self.lits)))
-            pair, mfile, centre = self.lits[j], self.lits_masks[j], False
-        x, y, m = self._cut(pair, mfile, rng, centre)
+            pair, lows, mfile, centre = self.lits[j], self.lits_in[j], self.lits_masks[j], False
+        x, y, m = self._cut(pair, lows, mfile, rng, centre)
         return (torch.from_numpy(np.ascontiguousarray(x)), torch.from_numpy(np.ascontiguousarray(y)),
                 torch.from_numpy(np.ascontiguousarray(m)), int(i % 2))
 
