@@ -87,11 +87,15 @@ def liver_roi(mask, erode=3):
 
 
 # ----------------------------------------------------------------------------- NIfTI handling
-def load_canonical(path, integer=False):
+def load_canonical(path, integer=False, affine=None):
     """Volume as (x, y, z) in RAS orientation (so slices can be shown the standard way)
-    plus voxel spacing (dx, dy, dz) in mm."""
+    plus voxel spacing (dx, dy, dz) in mm. affine: use this instead of the file's own (the masks
+    of LiTS volumes 48-130 carry an identity header although they are on the scan's voxel grid)."""
     import nibabel as nib
-    img = nib.as_closest_canonical(nib.load(path))
+    img = nib.load(path)
+    if affine is not None:
+        img = nib.Nifti1Image(np.asanyarray(img.dataobj), affine)
+    img = nib.as_closest_canonical(img)
     if integer:
         data = np.rint(np.asanyarray(img.dataobj)).astype(np.int16)
     else:
@@ -146,17 +150,32 @@ def _run(jobs, workers):
     return [_one_slice(j) for j in jobs]
 
 
+def mask_affine(volume_path, mask_path, pid):
+    """None if the mask's header agrees with the scan's; otherwise the scan's affine, so that both
+    are reoriented the same way. The voxel arrays of a LiTS scan and its mask are aligned as
+    stored; only some mask headers are wrong (identity), which would flip the mask left-right."""
+    import nibabel as nib
+    va, ma = nib.load(volume_path).affine, nib.load(mask_path).affine
+    if np.allclose(va, ma, atol=1e-3):
+        return None
+    print(f"NOTE {pid}: mask header {nib.aff2axcodes(ma)} != scan header {nib.aff2axcodes(va)}; "
+          f"using the scan's header for the mask", flush=True)
+    return va
+
+
 def convert_patient(volume_path, mask_path, out_root, pid, I0, dose=0.25, margin=5, workers=8, seed=0,
                     target_noise=None, quarter_only=False):
     """Convert one patient. target_noise: calibrate I0 for this patient first (I0 = start value).
     quarter_only: rewrite only quarter/ and meta.json (full/ and mask/ are left untouched
     if present, so another job may keep reading them)."""
     vol, zooms = load_canonical(volume_path)
-    msk, mz = load_canonical(mask_path, integer=True)
+    msk, mz = load_canonical(mask_path, integer=True, affine=mask_affine(volume_path, mask_path, pid))
     if vol.shape != msk.shape:
         raise ValueError(f"{pid}: scan {vol.shape} and mask {msk.shape} differ in shape")
-    if not np.allclose(zooms, mz, atol=1e-3):
-        print(f"WARNING {pid}: scan spacing {zooms} != mask spacing {mz}")
+    liver = msk >= 1
+    if liver.any():   # alignment check: mean HU inside the liver mask vs the same mask flipped left-right
+        print(f"{pid}: liver mask mean HU {float(vol[liver].mean()):.1f} "
+              f"(flipped left-right: {float(vol[liver[::-1]].mean()):.1f})", flush=True)
     if abs(zooms[0] - zooms[1]) > 1e-3:
         print(f"WARNING {pid}: non-square pixels {zooms[:2]} mm; using their mean for the simulation")
     spacing = float(np.mean(zooms[:2]))

@@ -396,3 +396,30 @@ Criteria (docs/success_criteria.md):
   points the lits_ext test set at the scratch; the prep disk guard measures the scratch.
   Patient meta.json files are copied to results/lits_ext_meta. Replaces lits_ext_prep + eval_ext.
 - SUBMITTED 21 Nov: **ext_pipeline = job 42584**.
+- Job 42584 waited ~4 h for a 4g slice; measured peak GPU memory on a 2g.10gb slice (job 42640):
+  CT-Mamba 1.7 GiB (3.8 s/slice), CTformer 1.3, CoreDiff 0.7, refiners 0.4 GiB, so the job was
+  moved to 2g.10gb and started.
+- **BUG FOUND AND FIXED (21 Nov): left-right flipped LiTS masks.** The masks of LiTS volumes
+  48-130 carry an identity NIfTI header (RAS, 1 mm) while their scans are LAS with real spacing;
+  the voxel arrays are aligned as stored, but `load_canonical` reoriented each file by its own
+  header, which flipped the mask left-right relative to the scan. Shown on lits_051 (raw files):
+  mean HU inside the liver mask 79.8 as stored vs -83.5 flipped. Job 42584 was cancelled after
+  4 min, before any extended-set data was used. Fix in scripts/make_lits_lowdose.py: the mask
+  takes the scan's affine when the headers disagree (`mask_affine`, logged as NOTE), and every
+  conversion prints a liver-mask alignment check. Re-tested on lits_051 (job 42646): 79.8 HU
+  (flipped -83.5); stored slices 84.4 vs -57.1 flipped.
+- **Impact on existing data (aligncheck over all 51 part-1 patients, job 42645):**
+  all 10 locked test patients are aligned (first evaluation unaffected). Training patients
+  lits_048, lits_049, lits_050 (the only part-1 patients with the header mismatch) have
+  left-right flipped masks: liver-mask mean 34 / 41 / 38 HU vs 95 / 109 / 124 HU flipped. These
+  3 of 41 LiTS training patients therefore had wrong tumour labels for (i) the evaluation
+  nnU-Net's training and (ii) the tumour-weighted loss and tumour-centred patches of refiner,
+  refiner25d and control. Not retrained (deadline; the nnU-Net is the same fixed evaluator for
+  every input); reported as a limitation.
+- The extended-set selection (scan_lits_ext.py) measured tumour diameters with the masks' 1 mm
+  header spacing instead of the scans' spacing (e.g. 0.90 x 0.90 x 3 mm), so diameters were
+  underestimated by about the cube root of the voxel volume (~1.3x) and the "58 < 10 mm" count
+  is too high. The selected patients stay as committed (changing them after the fact would be a
+  post-hoc choice); the evaluation (detect_eval) uses the scans' spacing from meta.json, so the
+  reported small-tumour counts will be the correct ones.
+- RESUBMITTED: **ext_pipeline = job 42648** (2g.10gb).

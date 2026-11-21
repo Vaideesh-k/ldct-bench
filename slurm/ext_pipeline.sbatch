@@ -10,7 +10,7 @@
 #     sbatch slurm/ext_pipeline.sbatch
 #SBATCH --job-name=ext_pipe
 #SBATCH --partition=gpu_student
-#SBATCH --gres=gpu:a100_4g.20gb:1
+#SBATCH --gres=gpu:a100_2g.10gb:1   # every model peaks <= 1.7 GiB (measured 21 Nov); 4g slices were all busy
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64000
