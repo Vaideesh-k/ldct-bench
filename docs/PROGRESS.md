@@ -387,3 +387,12 @@ Criteria (docs/success_criteria.md):
 - Caveat: two variants are judged against the same criteria, so a single pass would need a
   multiple-comparison note; not relevant since neither passes. The extended 20-patient set
   (step 6) is the final verdict.
+
+## 21 Nov
+- Step 6 rewritten as ONE GPU job on node-local scratch: `slurm/ext_pipeline.sbatch` (conversion
+  of the 10 extended patients from the remote Kaggle archives -> $SCR/lits_ext, quarter-dose
+  scores, nnU-Net detection on normal/quarter dose, then CT-Mamba, refiner, refiner25d, control,
+  CTformer, CoreDiff: predict -> score -> detect -> delete). `LDCT_LITS_EXT_ROOT` (ldct/config.py)
+  points the lits_ext test set at the scratch; the prep disk guard measures the scratch.
+  Patient meta.json files are copied to results/lits_ext_meta. Replaces lits_ext_prep + eval_ext.
+- SUBMITTED 21 Nov: **ext_pipeline = job 42584**.

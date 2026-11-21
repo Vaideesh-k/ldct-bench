@@ -1,5 +1,6 @@
 """Load the shared settings plus one model's overrides."""
 
+import os
 from pathlib import Path
 
 import yaml
@@ -40,6 +41,10 @@ def load_config(model_name, extra=None):
         cfg = _deep_merge(cfg, _read_yaml(path))
 
     cfg["model_name"] = model_name
+    # node-local scratch inside a job (slurm/ext_pipeline.sbatch): the extended LiTS set lives there
+    ext_root = os.environ.get("LDCT_LITS_EXT_ROOT")
+    if ext_root and "lits_ext" in cfg.get("data", {}).get("test_sets", {}):
+        cfg["data"]["test_sets"]["lits_ext"]["root"] = ext_root
     check_locked_patient(cfg)
     return cfg
 
