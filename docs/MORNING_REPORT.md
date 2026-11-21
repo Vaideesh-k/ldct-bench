@@ -1,39 +1,42 @@
-# Status report — final week, 20 Nov 2026 evening
+# Status report — final week, 21 Nov 2026 night
 
 Branch **`final-week`** (pushed after every step). Full log: docs/PROGRESS.md.
 
-## Done
+## Steps
 | step | status |
 |---|---|
-| 1 success criteria | **DONE** before any result (docs/success_criteria.md) |
-| 2 Stage A | **DONE** inside job 42024, on node-local scratch (home stayed at 40 GB) |
-| 3 refiner (2D) | **DONE**, 30,000 iterations |
-| 3b refiner 2.5D (owner decision 20 Nov, before results) | **DONE**, 30,000 iterations |
-| 4 control | **DONE** (job 39377) and evaluated |
-| 5 first evaluation | **DONE**: dgx_results/final_existing10{,_25d}.md |
-| 6 extended test set | split committed; conversion + evaluation **next** |
-| 7 report material | deck updated with results; figures after step 6 |
+| 1 success criteria | DONE before any result |
+| 2 Stage A | DONE (node-local scratch) |
+| 3 refiner 2D + 2.5D variant | DONE |
+| 4 control | DONE |
+| 5 first evaluation (10 patients) | DONE: dgx_results/final_existing10{,_25d}.md |
+| 6 extended set (20 patients, 106 tumours, 57 < 10 mm) | **DONE**: dgx_results/final_extended20{,_25d}.md |
+| 7 report material | deck updated; figures next |
 
-## First evaluation (10 LiTS patients, 34 tumours; L506) — preliminary
-| input | L506 PSNR | SSIM | detected | < 10 mm | FP/pt | per-tumour Dice |
-|---|---|---|---|---|---|---|
-| CT-Mamba | 29.42 | 0.8776 | 27/34 | 5/9 | 0.30 | 0.543 |
-| CTformer | 28.56 | 0.8680 | 28/34 | 5/9 | 0.50 | 0.585 |
-| CoreDiff | 29.28 | 0.8817 | 28/34 | 5/9 | 0.50 | 0.584 |
-| control | 29.41 | 0.8775 | 28/34 | 5/9 | 0.70 | 0.582 |
-| refiner 2D | 29.42 | 0.8775 | 28/34 | 5/9 | 0.50 | 0.582 |
-| **refiner 2.5D** | **29.64** | **0.8826** | 28/34 | 5/9 | 0.60 | 0.585 |
+## Final result (20 LiTS patients, 106 tumours; Mayo L506)
+| input | L506 PSNR | detected | < 10 mm | FP/pt | per-tumour Dice |
+|---|---|---|---|---|---|
+| normal dose | - | 70/106 | 26/57 | 0.40 | 0.417 |
+| quarter dose | 24.47 | 60/106 | 18/57 | 0.35 | 0.365 |
+| CT-Mamba | 29.42 | 64/106 | 20/57 | 0.30 | 0.354 |
+| CTformer | 28.56 | 68/106 | 23/57 | 0.40 | 0.416 |
+| CoreDiff | 29.28 | 64/106 | 19/57 | 0.40 | 0.378 |
+| **control** | 29.41 | **71/106** | **26/57** | 0.65 | **0.417** |
+| refiner 2D | 29.42 | 69/106 | 24/57 | 0.50 | 0.399 |
+| refiner 2.5D | **29.64** | 68/106 | 23/57 | 0.50 | 0.371 |
 
-Criteria a / b / c / d / e:
-- refiner 2D: FAIL / FAIL / FAIL / FAIL / FAIL — **not a win** (it stays at CT-Mamba's output).
-- refiner 2.5D: **PASS** / FAIL (by 0.0006) / PASS (not significant) / FAIL / FAIL — **not a win**.
+**Verdict: NOT A WIN** for both refiners (2D fails a-e; 2.5D passes only a).
+- The fine-tuned control (CT-Mamba + LiTS data + tumour-weighted loss) recovers normal-dose
+  tumour Dice and small-tumour detection; the refiner design adds nothing (2D is significantly
+  below the control, p 0.0007).
+- The 2.5D refiner has the best PSNR but a significantly lower Dice than the control, CTformer
+  and normal dose: better image scores again do not mean better tumour outlines.
 
-Plain reading: the 2.5D refiner is the best denoiser of the project on image quality (+0.22 dB
-over CT-Mamba, significant), but no denoiser changes tumour detection on this set: every trained
-model finds the same 28 of 34 tumours and the same 5 of 9 small ones, and the Dice differences are
-within noise.
+## Issues found and handled
+- LiTS masks of volumes 48-130 have an identity NIfTI header; conversion flipped them left-right.
+  Fixed before any extended-set use. Training patients lits_048-050 (3 of 41) had flipped masks
+  in nnU-Net and refiner/control training; not retrained, reported as a limitation.
+  All test patients verified aligned.
 
 ## Next
-1. Extended set (20 patients, 106 tumours, 58 < 10 mm): conversion on node scratch, then
-   detection for all inputs incl. both refiners — the final verdict per the criteria.
-2. Figures + report tables from final_stats.py on the extended set.
+- Figures (zoomed small-tumour examples, training curves) and report tables.

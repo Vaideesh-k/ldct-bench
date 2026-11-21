@@ -1,0 +1,26 @@
+{
+  "model": "ct_mamba_control",
+  "test_set": "lits_ext",
+  "slices": 1156,
+  "window_hu": [
+    -160,
+    240
+  ],
+  "mean": {
+    "psnr": 31.624786928248614,
+    "ssim": 0.8938066874663875,
+    "rmse": 10.874310479521524
+  },
+  "std": {
+    "psnr": 2.428324986385159,
+    "ssim": 0.04407018416765895,
+    "rmse": 2.7070925341957595
+  },
+  "timing": {
+    "slices": 1156,
+    "seconds_per_slice": 3.6400832203103963,
+    "device": "NVIDIA A100-SXM4-40GB MIG 2g.10gb",
+    "epoch": 28000,
+    "checkpoint": "best.pth"
+  }
+}

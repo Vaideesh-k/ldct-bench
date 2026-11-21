@@ -10,7 +10,7 @@ const THEME = { name: "LDCT Liver", headFontFace: "Cambria", bodyFontFace: "Cali
 
 const RES = process.env.RESULTS === "1";   // results deck (20 Nov): adds the refiner results
 const PLAN = process.env.PLAN === "1" || RES;
-const DATE = RES ? "20 Nov 2026" : "19 Nov 2026";
+const DATE = RES ? "21 Nov 2026" : "19 Nov 2026";
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.33 x 7.5
 pres.title = "Low-dose CT denoising for small liver tumours";
@@ -95,7 +95,7 @@ const chartBase = {
 pres.addSection({ title: "Introduction" });
 let s = pres.addSlide({ masterName: "TITLE_DARK", sectionTitle: "Introduction" });
 s.addText("Low-dose CT denoising for small liver tumours", { placeholder: "title" });
-s.addText("Does a denoiser that wins on image quality also help find tumours under 10 mm?\nB.Tech capstone  |  " + (RES ? "progress review, final architecture and first refiner results" : PLAN ? "progress review, final architecture and training plan" : "progress review and plan for the final week") + "  |  " + (RES ? "20" : "19") + " November 2026", { placeholder: "body" });
+s.addText("Does a denoiser that wins on image quality also help find tumours under 10 mm?\nB.Tech capstone  |  " + (RES ? "progress review, final architecture and refiner results" : PLAN ? "progress review, final architecture and training plan" : "progress review and plan for the final week") + "  |  " + (RES ? "21" : "19") + " November 2026", { placeholder: "body" });
 s.addNotes("Introduce the project: we compare deep-learning denoisers for quarter-dose CT, and test them not only on image scores but on whether a tumour segmenter still finds small liver tumours.");
 
 // ================================================================= 2 problem
@@ -363,8 +363,8 @@ table(s, RES ? [
   ["3  Refiner (2D) + 2.5D variant", HL("Done"), "30,000 iterations each, 43 checks pass"],
   ["4  Control fine-tune", HL("Done"), "30,000 iterations, 11 h 3 min"],
   ["5  First evaluation (10 patients)", HL("Done"), "All 7 inputs + 2.5D: images, detection, statistics"],
-  ["6  Extended set: scan + split", HL("Done"), "106 tumours, 58 small"],
-  ["6  Extended set: conversion + scoring", "Next", "~1.5 GB on node scratch, ~5 h GPU"],
+  ["6  Extended set: scan + split", HL("Done"), "106 tumours, 57 small"],
+  ["6  Extended set: conversion + scoring", HL("Done"), "20 patients, 106 tumours, all 8 inputs"],
   ["7  Report tables, figures, curves", "Scripts ready", "After step 6"],
 ] : [
   ["Step", "Status", "Numbers / ETA"],
@@ -540,6 +540,41 @@ table(s, [
 card(s, 0.6, 5.1, 5.9, 1.2, "Preliminary", "34 tumours only. The extended 20-patient set (106 tumours, 58 small) gives the final verdict.", { size: 14 });
 card(s, 6.8, 5.1, 5.9, 1.2, "Honest reading", "2.5D: a real image-quality gain, but no measurable gain on the tumour task.", { size: 14 });
 s.addNotes("The criteria were written on 18 Nov, before any refiner was trained, and are not changed after the results. The 2.5D variant was added on 20 Nov, also before any result.");
+
+// ---- final: extended set
+s = content("Refiner results", "Final test: 20 patients, 106 tumours (57 under 10 mm)");
+table(s, [
+  ["Input", "Detected", "< 10 mm", "FP / patient", "Per-tumour Dice [95% CI]", "Dice < 10 mm"],
+  ["Normal dose", "70/106", "26/57", "0.40", "0.417 [0.348, 0.486]", "0.220"],
+  ["Quarter dose", "60/106", "18/57", "0.35", "0.365 [0.296, 0.438]", "0.170"],
+  ["CT-Mamba", "64/106", "20/57", HL("0.30"), BAD("0.354 [0.288, 0.421]"), "0.175"],
+  ["CTformer", "68/106", "23/57", "0.40", "0.416 [0.346, 0.485]", "0.222"],
+  ["CoreDiff", "64/106", "19/57", "0.40", "0.378 [0.311, 0.448]", "0.193"],
+  [HL("Control"), HL("71/106"), HL("26/57"), BAD("0.65"), HL("0.417 [0.350, 0.484]"), HL("0.231")],
+  ["Refiner 2D", "69/106", "24/57", "0.50", "0.399 [0.330, 0.469]", "0.201"],
+  ["Refiner 2.5D", "68/106", "23/57", "0.50", "0.371 [0.302, 0.441]", "0.173"],
+], { x: 0.6, y: 1.4, w: 12.1, colW: [2.3, 1.4, 1.3, 1.7, 3.6, 1.8], rowH: 0.42 });
+card(s, 0.6, 5.35, 12.1, 0.95, null, "With 3x more tumours the inputs now separate: the 10-patient result (all models equal) was too small. Same nnU-Net, same scorer, scan spacing from each patient's header.", { size: 14 });
+s.addNotes("The 10 new patients are harder (many small tumours), so all Dice values are lower than on the first 10. Compare rows, not with the earlier table.");
+
+// ---- final verdict
+s = content("Refiner results", "Final verdict: neither refiner wins; the fine-tuning does");
+table(s, [
+  ["", "Criterion", "Refiner 2D", "Refiner 2.5D"],
+  ["a", "L506 PSNR ≥ 29.42 dB", F("FAIL  29.418"), P("PASS  29.64")],
+  ["b", "Dice ≥ best baseline (CTformer 0.416)", F("FAIL  0.399"), F("FAIL  0.371")],
+  ["c", "Dice > control (0.417)", F("FAIL  0.399"), F("FAIL  0.371")],
+  ["d", "Significant, in the refiner's favour", F("FAIL"), F("FAIL")],
+  ["e", "FP / patient ≤ CT-Mamba (0.30)", F("FAIL  0.50"), F("FAIL  0.50")],
+  ["", "Verdict", F("NOT A WIN"), F("NOT A WIN")],
+], { x: 0.6, y: 1.4, w: 7.4, colW: [0.4, 3.4, 1.8, 1.8], rowH: 0.5 });
+card(s, 8.25, 1.4, 4.45, 4.9, "What the paired tests show", [
+  "Control vs CT-Mamba: Dice +0.063, p < 0.0001: training on LiTS with the tumour-weighted loss is what helps.",
+  "Refiner 2D vs control: −0.018, p = 0.0007: the add-on network makes it worse, not better.",
+  "Refiner 2.5D vs control: −0.046, p < 0.0001, despite the best PSNR (L506 29.64, LiTS 31.90 dB).",
+  "Cost of the control: more false alarms (0.65 vs 0.30 per patient).",
+], { bullet: true, size: 14 });
+s.addNotes("Central finding confirmed on the larger set: the model with the best image scores is not the one that preserves tumours best.");
 }
 
 // ================================================================= 18 conclusion
@@ -550,8 +585,8 @@ s.addText([
   { text: "Built a complete benchmark: 3 denoisers, real + simulated quarter dose, locked tests, a fixed tumour segmenter.", options: { bullet: true, breakLine: true } },
   { text: "CT-Mamba wins on images (29.42 dB Mayo, 29.92 dB LiTS) but has the lowest tumour Dice (0.543 vs 0.582 normal dose).", options: { bullet: true, breakLine: true } },
   ...(RES ? [
-  { text: "New 2.5D refiner: best image quality of the project (29.64 dB, +0.22 dB over CT-Mamba, significant); no gain on the tumour task yet.", options: { bullet: true, breakLine: true } },
-  { text: "Next: score all inputs on the 106-tumour extended set for the final verdict against criteria (a)-(e).", options: { bullet: true } },
+  { text: "Final test (106 tumours): neither refiner wins. Fine-tuning CT-Mamba on LiTS with a tumour-weighted loss recovers normal-dose Dice (0.417) and small-tumour detection (26/57).", options: { bullet: true, breakLine: true } },
+  { text: "The 2.5D refiner has the best PSNR (29.64 dB) but a significantly lower tumour Dice: image quality is not tumour visibility.", options: { bullet: true } },
   ] : [
   { text: "Next: evaluate refiner vs control, score the 106-tumour extended set, verdict against the pre-registered criteria (a)-(e).", options: { bullet: true } },
   ]),

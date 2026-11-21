@@ -423,3 +423,40 @@ Criteria (docs/success_criteria.md):
   post-hoc choice); the evaluation (detect_eval) uses the scans' spacing from meta.json, so the
   reported small-tumour counts will be the correct ones.
 - RESUBMITTED: **ext_pipeline = job 42648** (2g.10gb).
+- **ext_pipeline 42648 COMPLETED 21 Nov 21:06** (~5 h on 2g.10gb). All 10 conversions passed the
+  alignment check (liver-mask mean 80-139 HU, flipped -137..+55); only lits_051 needed the header
+  fix. Live Stage-A check 0.0 HU. Correction to the note above: only lits_051 of the extended
+  patients had the identity mask header, so the selection's small-tumour count was off by one:
+  the evaluation counts **57** tumours < 10 mm of 106 (not 58).
+
+### FINAL evaluation: 20 LiTS patients, 106 tumours (57 < 10 mm) + Mayo L506
+`scripts/merge_detect.py` (10 + 10 patients) -> `final_stats.py --detect-results dgx_results/combined20`
+-> dgx_results/final_extended20{,_25d}.*
+
+| input | detected | < 10 mm | FP/pt | per-tumour Dice [95% CI] | Dice < 10 mm | LiTS-ext PSNR |
+|---|---|---|---|---|---|---|
+| normal dose | 70/106 | 26/57 | 0.40 | 0.417 [0.348, 0.486] | 0.220 | - |
+| quarter dose | 60/106 | 18/57 | 0.35 | 0.365 [0.296, 0.438] | 0.170 | 23.91 |
+| CT-Mamba | 64/106 | 20/57 | 0.30 | 0.354 [0.288, 0.421] | 0.175 | 30.54 |
+| CTformer | 68/106 | 23/57 | 0.40 | 0.416 [0.346, 0.485] | 0.222 | 29.02 |
+| CoreDiff | 64/106 | 19/57 | 0.40 | 0.378 [0.311, 0.448] | 0.193 | 29.79 |
+| control | **71/106** | **26/57** | 0.65 | **0.417** [0.350, 0.484] | **0.231** | 31.62 |
+| refiner 2D | 69/106 | 24/57 | 0.50 | 0.399 [0.330, 0.469] | 0.201 | 31.40 |
+| refiner 2.5D | 68/106 | 23/57 | 0.50 | 0.371 [0.302, 0.441] | 0.173 | **31.90** |
+
+Criteria: refiner 2D FAIL a b c d e; refiner 2.5D PASS a, FAIL b c d e. **Final verdict: NOT A WIN
+for either.** Paired per-tumour Dice: refiner - control -0.018 [-0.029, -0.008] p 0.0007
+(significantly WORSE); refiner - CT-Mamba +0.045 p < 1e-4; refiner - CTformer -0.017 p 0.17;
+2.5D - control -0.046 p < 1e-4; 2.5D - CTformer -0.044 p 0.002; 2.5D - normal dose -0.046 p 0.001.
+Control - CT-Mamba +0.063 p < 1e-4.
+
+Reading:
+1. The extra training on LiTS with the tumour-weighted loss is what helps: the fine-tuned
+   control reaches normal-dose Dice (0.417 vs 0.417) and normal-dose small-tumour detection
+   (26/57), up from CT-Mamba 0.354 and 20/57; it costs false positives (0.65 vs 0.30).
+2. The refiner design does not add to that; the 2D refiner is significantly below the control.
+3. The 2.5D refiner has the best image scores (L506 29.64 dB, LiTS-ext 31.90 dB) and the
+   second-worst trained-model Dice: on 106 tumours, higher PSNR again does not mean better
+   tumour outlines - the project's central finding, now on a larger set.
+4. The first 10-patient result (all models equal) was too small to separate them; on the
+   new patients the differences are large and significant.
