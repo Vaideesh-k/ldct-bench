@@ -471,3 +471,9 @@ Reading:
   fixed rule (largest < 10 mm in the locked test set, from masks only), predicts ONLY that
   patient (new env filter `LDCT_ONLY_PATIENTS` in ldct/data.py test_set_pairs) to node scratch
   and draws small_tumour.png (8 inputs). Only the PNG reaches home.
+- Job 42811 done (12 min, 2g slice): tumour chosen = lits_011 slice 147, 9.4 mm. Predicted 177
+  slices of lits_011 only; live CT-Mamba vs stored Stage A max diff 0.02 HU. Home stayed 40 GB.
+  small_tumour.png: CT-Mamba and CoreDiff smooth the liver flat, CTformer shows a patch grid,
+  control and both refiners keep texture.
+- Deck docs/report/LDCT_Refiner_Results.pptx: 4 figure slides added (37 slides); "58 small"
+  typo fixed to 57. **Step 7 done.**

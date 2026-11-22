@@ -374,7 +374,7 @@ table(s, RES ? [
   ["3  Refiner training", BAD("Blocked: needs step 2"), "30,000 iterations, ~2-4 h"],
   ["4  Control fine-tune", HL("Done"), "30,000 its in ~10.9 h, best window loss 0.004045"],
   ["5  First evaluation (10 patients)", BAD("Control eval stopped: disk"), "Images + detection + statistics, ~20 Nov"],
-  ["6  Extended set: scan + split", HL("Done"), "106 tumours, 58 small"],
+  ["6  Extended set: scan + split", HL("Done"), "106 tumours, 57 small"],
   ["6  Extended set: conversion + scoring", "Waiting for disk", "~1.5 GB data, ~5 h GPU"],
   ["7  Report tables, figures, curves", "Scripts ready", "After step 6"],
 ], { x: 0.6, y: 1.45, w: 12.1, colW: [4.6, 2.6, 4.9], rowH: 0.45 });
@@ -387,7 +387,7 @@ const risks = [
   ["One GPU job at a time", "Refiner and control cannot run in parallel; queue waits for free MIG slices.", "Chained, resumable jobs; shorten both runs equally if needed."],
   ["50 GB storage quota", "Home at ~40 GB, rule keeps 10 GB free; next steps need ~8\u00A0GB.", "Archive rebuildable data to an external laptop, then delete on the cluster."],
   ["Simulated low dose", "LiTS quarter dose is simulated (parallel beam, no bow-tie).", "Calibrated to real Mayo noise; Mayo L506 stays as a real-dose check."],
-  ["Small sample", "34 tumours cannot separate models on detection counts.", "Extended set (106 tumours, 58 small) + bootstrap CIs."],
+  ["Small sample", "34 tumours cannot separate models on detection counts.", "Extended set (106 tumours, 57 small) + bootstrap CIs."],
 ];
 risks.forEach(([h, r, m], i) => {
   const x = 0.6 + (i % 2) * 6.15, y = 1.45 + Math.floor(i / 2) * 2.45;
@@ -537,7 +537,7 @@ table(s, [
   ["e", "FP / patient ≤ CT-Mamba (0.30)", F("FAIL  0.50"), F("FAIL  0.60")],
   ["", "Verdict (all five needed)", F("NOT A WIN"), F("NOT A WIN")],
 ], { x: 0.6, y: 1.4, w: 12.1, colW: [0.5, 5.0, 3.3, 3.3], rowH: 0.5 });
-card(s, 0.6, 5.1, 5.9, 1.2, "Preliminary", "34 tumours only. The extended 20-patient set (106 tumours, 58 small) gives the final verdict.", { size: 14 });
+card(s, 0.6, 5.1, 5.9, 1.2, "Preliminary", "34 tumours only. The extended 20-patient set (106 tumours, 57 small) gives the final verdict.", { size: 14 });
 card(s, 6.8, 5.1, 5.9, 1.2, "Honest reading", "2.5D: a real image-quality gain, but no measurable gain on the tumour task.", { size: 14 });
 s.addNotes("The criteria were written on 18 Nov, before any refiner was trained, and are not changed after the results. The 2.5D variant was added on 20 Nov, also before any result.");
 
@@ -575,6 +575,37 @@ card(s, 8.25, 1.4, 4.45, 4.9, "What the paired tests show", [
   "Cost of the control: more false alarms (0.65 vs 0.30 per patient).",
 ], { bullet: true, size: 14 });
 s.addNotes("Central finding confirmed on the larger set: the model with the best image scores is not the one that preserves tumours best.");
+
+// ---- figures (scripts/make_figures.py; docs/report/figures)
+const FIG = __dirname + "/figures/";
+s = content("Refiner results", "Detection on 106 tumours, all inputs");
+s.addImage({ path: FIG + "detection.png", x: 0.6, y: 1.35, w: 12.1, h: 3.96, altText: "Three bar charts for 8 inputs on 20 LiTS patients: tumours detected of 106, tumours under 10 mm detected of 57, and per-tumour Dice with 95% CI. The control matches normal dose (71/106, 26/57, Dice 0.417); CT-Mamba is lowest in Dice (0.354).", objectName: "figdet" });
+card(s, 0.6, 5.45, 12.1, 0.85, null, "Grey: no denoiser. Blue: published denoisers. Orange: this project. Only the control reaches the normal-dose line on all three measures.", { size: 14 });
+
+s = content("Refiner results", "Higher PSNR does not mean better tumour outlines");
+s.addImage({ path: FIG + "psnr_vs_dice.png", x: 0.6, y: 1.3, w: 7.6, h: 4.9, altText: "Scatter of Mayo L506 PSNR against per-tumour Dice. CT-Mamba and the 2.5D refiner have the highest PSNR but low Dice; CTformer has lower PSNR but Dice close to normal dose; the control is on the normal-dose line.", objectName: "figpsnr" });
+card(s, 8.45, 1.4, 4.25, 4.8, "Reading the plot", [
+  "Five models sit within 0.4 dB of each other, yet their Dice ranges from 0.354 to 0.417.",
+  "The 2.5D refiner has the best PSNR and the second-lowest Dice of the trained models.",
+  "CTformer has the lowest PSNR of the denoisers and nearly normal-dose Dice.",
+], { bullet: true, size: 14 });
+
+s = content("Refiner results", "One small tumour, every input");
+s.addImage({ path: FIG + "small_tumour.png", x: 0.6, y: 1.3, w: 8.9, h: 4.96, altText: "Zoomed 9.4 mm tumour in lits_011 slice 147 for 8 inputs with the ground-truth outline. Quarter dose is very noisy; CT-Mamba and CoreDiff are smooth; CTformer shows a patch grid; control and refiners keep more liver texture.", objectName: "figzoom" });
+card(s, 9.75, 1.4, 2.95, 4.85, "lits_011, 9.4 mm", [
+  "Chosen by a rule fixed in advance: the largest tumour under 10 mm in the locked test set.",
+  "CT-Mamba and CoreDiff smooth the liver flat.",
+  "CTformer leaves a patch grid.",
+  "Control and refiners keep texture.",
+], { bullet: true, size: 13 });
+
+s = content("Refiner results", "Training: lower loss did not give better tumours");
+s.addImage({ path: FIG + "training_curves.png", x: 0.6, y: 1.3, w: 7.8, h: 4.53, altText: "Training loss over 30,000 iterations: 2.5D refiner lowest (about 3.83e-3), 2D refiner 3.99e-3, control highest (4.06e-3).", objectName: "figtrain" });
+card(s, 8.65, 1.4, 4.05, 4.8, "Same data, same loss", [
+  "The 2.5D refiner reaches the lowest training loss.",
+  "The control has the highest loss, yet the best tumour Dice on the test set.",
+  "The loss is per-pixel L1 (tumour pixels weighted up); it does not measure whether tumour outlines survive.",
+], { bullet: true, size: 14 });
 }
 
 // ================================================================= 18 conclusion

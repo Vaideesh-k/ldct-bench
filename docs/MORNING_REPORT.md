@@ -11,7 +11,7 @@ Branch **`final-week`** (pushed after every step). Full log: docs/PROGRESS.md.
 | 4 control | DONE |
 | 5 first evaluation (10 patients) | DONE: dgx_results/final_existing10{,_25d}.md |
 | 6 extended set (20 patients, 106 tumours, 57 < 10 mm) | **DONE**: dgx_results/final_extended20{,_25d}.md |
-| 7 report material | deck updated; 3 figures in docs/report/figures; zoomed tumour figure: job 42811 |
+| 7 report material | **DONE**: 4 figures in docs/report/figures, deck 37 slides |
 
 ## Final result (20 LiTS patients, 106 tumours; Mayo L506)
 | input | L506 PSNR | detected | < 10 mm | FP/pt | per-tumour Dice |
@@ -39,4 +39,4 @@ Branch **`final-week`** (pushed after every step). Full log: docs/PROGRESS.md.
   All test patients verified aligned.
 
 ## Next
-- small_tumour.png from job 42811, then add the figures to the deck.
+- Nothing queued. All brief steps done; write-up of the report text from these tables and figures.
