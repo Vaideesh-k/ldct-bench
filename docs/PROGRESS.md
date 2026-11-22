@@ -460,3 +460,14 @@ Reading:
    tumour outlines - the project's central finding, now on a larger set.
 4. The first 10-patient result (all models equal) was too small to separate them; on the
    new patients the differences are large and significant.
+
+## Step 7 - report figures (22 Nov)
+- `python scripts/make_figures.py --part local` (laptop, committed results only) ->
+  docs/report/figures/: detection.png (detected / < 10 mm / per-tumour Dice with CI, 8 inputs,
+  20 patients), psnr_vs_dice.png (L506 PSNR vs per-tumour Dice), training_curves.png
+  (control, 2D, 2.5D refiner; same data and loss).
+- Zoomed small tumour: the control/refiner predictions for the original 10 test patients were
+  only on job scratch, so slurm/figures.sbatch (job 42811, 2g slice) picks the tumour by the
+  fixed rule (largest < 10 mm in the locked test set, from masks only), predicts ONLY that
+  patient (new env filter `LDCT_ONLY_PATIENTS` in ldct/data.py test_set_pairs) to node scratch
+  and draws small_tumour.png (8 inputs). Only the PNG reaches home.

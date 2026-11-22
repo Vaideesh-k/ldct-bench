@@ -119,6 +119,12 @@ def test_set_pairs(test_set):
         patients = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
         if not patients:
             raise FileNotFoundError(f"No patient folders in {root}")
+    only = os.environ.get("LDCT_ONLY_PATIENTS")   # figure job: predict a few patients of a set only
+    if only:
+        keep = only.split(",")
+        patients = [p for p in patients if p in keep]
+        if not patients:
+            raise ValueError(f"LDCT_ONLY_PATIENTS={only} matches no patient of this test set")
     return list_pairs(root, patients)
 
 
