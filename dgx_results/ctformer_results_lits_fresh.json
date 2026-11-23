@@ -1,0 +1,26 @@
+{
+  "model": "ctformer",
+  "test_set": "lits_fresh",
+  "slices": 1839,
+  "window_hu": [
+    -160,
+    240
+  ],
+  "mean": {
+    "psnr": 28.768217049216148,
+    "ssim": 0.8516815926826675,
+    "rmse": 14.979312419642811
+  },
+  "std": {
+    "psnr": 2.0795782007629184,
+    "ssim": 0.043797743945348404,
+    "rmse": 3.3595995342381233
+  },
+  "timing": {
+    "slices": 1839,
+    "seconds_per_slice": 0.3515057863897651,
+    "device": "NVIDIA A100-SXM4-40GB MIG 2g.10gb",
+    "epoch": 1380,
+    "checkpoint": "best.pth"
+  }
+}

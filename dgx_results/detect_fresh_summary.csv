@@ -1,0 +1,9 @@
+input,patients,lesions,detected,detection_rate,small_lesions_under_10mm,small_detected,small_detection_rate,false_positives_per_patient,mean_per_lesion_dice,mean_per_patient_dice
+corediff,10,240,122,0.5083,137,40,0.292,0.9,0.2966,0.5869
+ct_mamba,10,240,116,0.4833,137,36,0.2628,0.8,0.2599,0.518
+ct_mamba_control,10,240,132,0.55,137,43,0.3139,1.1,0.3335,0.6289
+ct_mamba_refiner,10,240,124,0.5167,137,36,0.2628,1.0,0.3217,0.6289
+ct_mamba_refiner25d,10,240,122,0.5083,137,36,0.2628,1.0,0.3212,0.624
+ctformer,10,240,125,0.5208,137,38,0.2774,1.0,0.3227,0.6262
+full,10,240,132,0.55,137,39,0.2847,0.8,0.3486,0.67
+quarter,10,240,124,0.5167,137,34,0.2482,1.0,0.3296,0.6337

@@ -1,0 +1,1796 @@
+{
+ "summary": {
+  "patients": 10,
+  "lesions": 240,
+  "detected": 132,
+  "detection_rate": 0.55,
+  "small_lesions_under_10mm": 137,
+  "small_detected": 43,
+  "small_detection_rate": 0.31386861313868614,
+  "false_positives_per_patient": 1.1,
+  "mean_per_lesion_dice": 0.33354772709310204,
+  "mean_per_patient_dice": 0.6288708126537097
+ },
+ "per_patient": {
+  "lits_078": {
+   "lesions": 14,
+   "detected": 8,
+   "small_lesions": 9,
+   "small_detected": 3,
+   "false_positives": 1,
+   "dice": 0.6871751352498143,
+   "per_lesion": [
+    {
+     "voxels": 950,
+     "diameter_mm": 14.088312316152622,
+     "detected": true,
+     "overlap_fraction": 0.27578947368421053,
+     "dice": 0.43234323432343236
+    },
+    {
+     "voxels": 4328,
+     "diameter_mm": 23.35501692273442,
+     "detected": true,
+     "overlap_fraction": 0.5864140480591498,
+     "dice": 0.7383272727272727
+    },
+    {
+     "voxels": 139,
+     "diameter_mm": 7.423739129617831,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 33,
+     "diameter_mm": 4.59680148451316,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 28,
+     "diameter_mm": 4.351815213086901,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 437,
+     "diameter_mm": 10.875391866906918,
+     "detected": true,
+     "overlap_fraction": 0.7231121281464531,
+     "dice": 0.8061224489795918
+    },
+    {
+     "voxels": 241,
+     "diameter_mm": 8.91846508574245,
+     "detected": true,
+     "overlap_fraction": 0.5518672199170125,
+     "dice": 0.6873385012919897
+    },
+    {
+     "voxels": 72,
+     "diameter_mm": 5.962045248463012,
+     "detected": true,
+     "overlap_fraction": 0.041666666666666664,
+     "dice": 0.08
+    },
+    {
+     "voxels": 71,
+     "diameter_mm": 5.934314404569501,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 5365,
+     "diameter_mm": 25.0884796675564,
+     "detected": true,
+     "overlap_fraction": 0.5483690587138863,
+     "dice": 0.7062777577721762
+    },
+    {
+     "voxels": 345,
+     "diameter_mm": 10.051343937704209,
+     "detected": true,
+     "overlap_fraction": 0.5855072463768116,
+     "dice": 0.7279279279279279
+    },
+    {
+     "voxels": 69,
+     "diameter_mm": 5.878061593345093,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 26,
+     "diameter_mm": 4.245630731920217,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 161,
+     "diameter_mm": 7.796381117152914,
+     "detected": true,
+     "overlap_fraction": 0.5093167701863354,
+     "dice": 0.6721311475409836
+    }
+   ]
+  },
+  "lits_093": {
+   "lesions": 30,
+   "detected": 23,
+   "small_lesions": 11,
+   "small_detected": 7,
+   "false_positives": 1,
+   "dice": 0.4203712145880821,
+   "per_lesion": [
+    {
+     "voxels": 176,
+     "diameter_mm": 4.902752910302126,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1380,
+     "diameter_mm": 9.740071516225095,
+     "detected": true,
+     "overlap_fraction": 0.8239130434782609,
+     "dice": 0.8009862627685805
+    },
+    {
+     "voxels": 18440,
+     "diameter_mm": 23.112987750443548,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 285,
+     "diameter_mm": 5.757280690343861,
+     "detected": true,
+     "overlap_fraction": 0.3508771929824561,
+     "dice": 0.48426150121065376
+    },
+    {
+     "voxels": 1785,
+     "diameter_mm": 10.612438594898798,
+     "detected": true,
+     "overlap_fraction": 0.9372549019607843,
+     "dice": 0.8592706728299949
+    },
+    {
+     "voxels": 20711,
+     "diameter_mm": 24.025336166742928,
+     "detected": true,
+     "overlap_fraction": 0.9293129254985274,
+     "dice": 0.9095505883464865
+    },
+    {
+     "voxels": 3678,
+     "diameter_mm": 13.504329474248456,
+     "detected": true,
+     "overlap_fraction": 0.7797716150081566,
+     "dice": 0.8351776354105999
+    },
+    {
+     "voxels": 4517,
+     "diameter_mm": 14.461693306230991,
+     "detected": true,
+     "overlap_fraction": 0.8897498339605933,
+     "dice": 0.880297886321323
+    },
+    {
+     "voxels": 5480,
+     "diameter_mm": 15.423962821281672,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 5347,
+     "diameter_mm": 15.298159276290937,
+     "detected": true,
+     "overlap_fraction": 0.05049560501215635,
+     "dice": 0.09613672779063558
+    },
+    {
+     "voxels": 6259,
+     "diameter_mm": 16.122687417270377,
+     "detected": true,
+     "overlap_fraction": 0.6956382808755392,
+     "dice": 0.7565595134665508
+    },
+    {
+     "voxels": 1613,
+     "diameter_mm": 10.259997131349825,
+     "detected": true,
+     "overlap_fraction": 0.5889646621202728,
+     "dice": 0.7129455909943715
+    },
+    {
+     "voxels": 11925,
+     "diameter_mm": 19.987351317486496,
+     "detected": true,
+     "overlap_fraction": 0.9640251572327044,
+     "dice": 0.8475688428502968
+    },
+    {
+     "voxels": 892,
+     "diameter_mm": 8.421524860099888,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 30926,
+     "diameter_mm": 27.460621832624753,
+     "detected": true,
+     "overlap_fraction": 0.08843691392355947,
+     "dice": 0.16249294477616374
+    },
+    {
+     "voxels": 346,
+     "diameter_mm": 6.14178321439714,
+     "detected": true,
+     "overlap_fraction": 1.0,
+     "dice": 0.5144981412639406
+    },
+    {
+     "voxels": 4336,
+     "diameter_mm": 14.265890123062896,
+     "detected": true,
+     "overlap_fraction": 0.6623616236162362,
+     "dice": 0.759486976067698
+    },
+    {
+     "voxels": 99331,
+     "diameter_mm": 40.516387813619865,
+     "detected": true,
+     "overlap_fraction": 0.2732782313678509,
+     "dice": 0.4191404108795849
+    },
+    {
+     "voxels": 77007,
+     "diameter_mm": 37.220241365886956,
+     "detected": true,
+     "overlap_fraction": 0.13175425610658772,
+     "dice": 0.22823336220180185
+    },
+    {
+     "voxels": 695,
+     "diameter_mm": 7.749328150067627,
+     "detected": true,
+     "overlap_fraction": 0.06762589928057554,
+     "dice": 0.11706102117061021
+    },
+    {
+     "voxels": 36270,
+     "diameter_mm": 28.959093875472213,
+     "detected": true,
+     "overlap_fraction": 0.01825199889716019,
+     "dice": 0.03584966966316473
+    },
+    {
+     "voxels": 780,
+     "diameter_mm": 8.053178358636293,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 6426,
+     "diameter_mm": 16.26482359193667,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1111,
+     "diameter_mm": 9.060951445963628,
+     "detected": true,
+     "overlap_fraction": 0.3915391539153915,
+     "dice": 0.5552010210593491
+    },
+    {
+     "voxels": 245,
+     "diameter_mm": 5.474248125630857,
+     "detected": true,
+     "overlap_fraction": 0.49387755102040815,
+     "dice": 0.5916870415647921
+    },
+    {
+     "voxels": 2153,
+     "diameter_mm": 11.296670465464267,
+     "detected": true,
+     "overlap_fraction": 0.800743149094287,
+     "dice": 0.805607476635514
+    },
+    {
+     "voxels": 283,
+     "diameter_mm": 5.7437817411867025,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 616,
+     "diameter_mm": 7.443822709627373,
+     "detected": true,
+     "overlap_fraction": 0.2922077922077922,
+     "dice": 0.45226130653266333
+    },
+    {
+     "voxels": 2619,
+     "diameter_mm": 12.05908296403191,
+     "detected": true,
+     "overlap_fraction": 0.8308514700267278,
+     "dice": 0.8760064412238325
+    },
+    {
+     "voxels": 2456,
+     "diameter_mm": 11.803529896729344,
+     "detected": true,
+     "overlap_fraction": 0.862785016286645,
+     "dice": 0.8624338624338624
+    }
+   ]
+  },
+  "lits_097": {
+   "lesions": 12,
+   "detected": 10,
+   "small_lesions": 3,
+   "small_detected": 2,
+   "false_positives": 1,
+   "dice": 0.8823339747823947,
+   "per_lesion": [
+    {
+     "voxels": 73769,
+     "diameter_mm": 37.20593967623354,
+     "detected": true,
+     "overlap_fraction": 0.9051363038674782,
+     "dice": 0.888402509363545
+    },
+    {
+     "voxels": 17481,
+     "diameter_mm": 23.02376814168765,
+     "detected": true,
+     "overlap_fraction": 0.8659115611235055,
+     "dice": 0.8654164999142416
+    },
+    {
+     "voxels": 179463,
+     "diameter_mm": 50.039460644112275,
+     "detected": true,
+     "overlap_fraction": 0.8920668884393997,
+     "dice": 0.7737680672593832
+    },
+    {
+     "voxels": 2255,
+     "diameter_mm": 11.633306242912715,
+     "detected": true,
+     "overlap_fraction": 0.7144124168514412,
+     "dice": 0.8020911127707244
+    },
+    {
+     "voxels": 218173,
+     "diameter_mm": 53.40574527231216,
+     "detected": true,
+     "overlap_fraction": 0.8628794580447626,
+     "dice": 0.8157528696533883
+    },
+    {
+     "voxels": 977,
+     "diameter_mm": 8.802766190184428,
+     "detected": true,
+     "overlap_fraction": 0.7328556806550666,
+     "dice": 0.7412008281573499
+    },
+    {
+     "voxels": 684,
+     "diameter_mm": 7.816392261036071,
+     "detected": true,
+     "overlap_fraction": 0.716374269005848,
+     "dice": 0.7674236491777604
+    },
+    {
+     "voxels": 72289,
+     "diameter_mm": 36.955440600138,
+     "detected": true,
+     "overlap_fraction": 0.9113419745742782,
+     "dice": 0.9038028864621632
+    },
+    {
+     "voxels": 115529,
+     "diameter_mm": 43.20672183142365,
+     "detected": true,
+     "overlap_fraction": 0.9321555626725757,
+     "dice": 0.9079381673629232
+    },
+    {
+     "voxels": 2153,
+     "diameter_mm": 11.455190663400785,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 42166,
+     "diameter_mm": 30.877475109630414,
+     "detected": true,
+     "overlap_fraction": 0.9614855570839065,
+     "dice": 0.8904849762783342
+    },
+    {
+     "voxels": 371,
+     "diameter_mm": 6.374492512998745,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    }
+   ]
+  },
+  "lits_099": {
+   "lesions": 13,
+   "detected": 9,
+   "small_lesions": 10,
+   "small_detected": 6,
+   "false_positives": 0,
+   "dice": 0.5634126710359895,
+   "per_lesion": [
+    {
+     "voxels": 1663,
+     "diameter_mm": 11.071010996957352,
+     "detected": true,
+     "overlap_fraction": 0.0036079374624173183,
+     "dice": 0.007189934092270821
+    },
+    {
+     "voxels": 325,
+     "diameter_mm": 6.424672379098215,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 502,
+     "diameter_mm": 7.4266183239088575,
+     "detected": true,
+     "overlap_fraction": 0.25298804780876494,
+     "dice": 0.40381558028616854
+    },
+    {
+     "voxels": 314,
+     "diameter_mm": 6.351355400936336,
+     "detected": true,
+     "overlap_fraction": 0.04777070063694268,
+     "dice": 0.0911854103343465
+    },
+    {
+     "voxels": 291,
+     "diameter_mm": 6.192331465976992,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 114,
+     "diameter_mm": 4.530973090037637,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 3282,
+     "diameter_mm": 13.886817391186849,
+     "detected": true,
+     "overlap_fraction": 0.12126751980499695,
+     "dice": 0.21548456957227938
+    },
+    {
+     "voxels": 3802,
+     "diameter_mm": 14.584579201901166,
+     "detected": true,
+     "overlap_fraction": 0.8521830615465544,
+     "dice": 0.898627097489946
+    },
+    {
+     "voxels": 26,
+     "diameter_mm": 2.7683074091237736,
+     "detected": true,
+     "overlap_fraction": 0.4230769230769231,
+     "dice": 0.3142857142857143
+    },
+    {
+     "voxels": 683,
+     "diameter_mm": 8.229310209175994,
+     "detected": true,
+     "overlap_fraction": 0.808199121522694,
+     "dice": 0.8604832424006236
+    },
+    {
+     "voxels": 340,
+     "diameter_mm": 6.522030690174677,
+     "detected": true,
+     "overlap_fraction": 0.5764705882352941,
+     "dice": 0.717948717948718
+    },
+    {
+     "voxels": 751,
+     "diameter_mm": 8.493822441763772,
+     "detected": true,
+     "overlap_fraction": 0.47270306258322237,
+     "dice": 0.6419529837251357
+    },
+    {
+     "voxels": 160,
+     "diameter_mm": 5.072980504251244,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    }
+   ]
+  },
+  "lits_108": {
+   "lesions": 66,
+   "detected": 31,
+   "small_lesions": 33,
+   "small_detected": 5,
+   "false_positives": 0,
+   "dice": 0.618331720150362,
+   "per_lesion": [
+    {
+     "voxels": 1092425,
+     "diameter_mm": 96.08287916161937,
+     "detected": true,
+     "overlap_fraction": 0.502217543538458,
+     "dice": 0.6299827873869095
+    },
+    {
+     "voxels": 4728,
+     "diameter_mm": 15.658180228647034,
+     "detected": true,
+     "overlap_fraction": 0.4583333333333333,
+     "dice": 0.6200286123032904
+    },
+    {
+     "voxels": 5111,
+     "diameter_mm": 16.070057298562105,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 3644,
+     "diameter_mm": 14.356269013226033,
+     "detected": true,
+     "overlap_fraction": 0.0019209659714599342,
+     "dice": 0.003834565872363736
+    },
+    {
+     "voxels": 16772,
+     "diameter_mm": 23.88051835971765,
+     "detected": true,
+     "overlap_fraction": 0.022656808967326497,
+     "dice": 0.04429420678400746
+    },
+    {
+     "voxels": 624,
+     "diameter_mm": 7.9721781455277405,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1777,
+     "diameter_mm": 11.299986922679874,
+     "detected": true,
+     "overlap_fraction": 0.5706246482836241,
+     "dice": 0.7024593003117423
+    },
+    {
+     "voxels": 223,
+     "diameter_mm": 5.657402603254706,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 41508,
+     "diameter_mm": 32.30175119393675,
+     "detected": true,
+     "overlap_fraction": 0.16001734605377277,
+     "dice": 0.2744117829329257
+    },
+    {
+     "voxels": 2029,
+     "diameter_mm": 11.810713842936556,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 2073,
+     "diameter_mm": 11.895478023321242,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 8457,
+     "diameter_mm": 19.0073209664394,
+     "detected": true,
+     "overlap_fraction": 0.31417760435142483,
+     "dice": 0.47740544425478393
+    },
+    {
+     "voxels": 2747,
+     "diameter_mm": 13.065770275533133,
+     "detected": true,
+     "overlap_fraction": 0.5129231889333818,
+     "dice": 0.668564650059312
+    },
+    {
+     "voxels": 338,
+     "diameter_mm": 6.498618337696318,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 30581,
+     "diameter_mm": 29.174227093356432,
+     "detected": true,
+     "overlap_fraction": 0.6744056767273797,
+     "dice": 0.7112950508708398
+    },
+    {
+     "voxels": 1409,
+     "diameter_mm": 10.458894830840814,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 235,
+     "diameter_mm": 5.7571129807108115,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 167,
+     "diameter_mm": 5.137529027116299,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 11154,
+     "diameter_mm": 20.844541415701347,
+     "detected": true,
+     "overlap_fraction": 0.6973283127129281,
+     "dice": 0.8086079634057595
+    },
+    {
+     "voxels": 39273,
+     "diameter_mm": 31.711259444112244,
+     "detected": true,
+     "overlap_fraction": 0.4205179130700481,
+     "dice": 0.5560512449285365
+    },
+    {
+     "voxels": 413,
+     "diameter_mm": 6.947557484317813,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 238,
+     "diameter_mm": 5.781507818624829,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 598,
+     "diameter_mm": 7.859878987770557,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 9355,
+     "diameter_mm": 19.657580472733688,
+     "detected": true,
+     "overlap_fraction": 0.5359700694815607,
+     "dice": 0.69182476716109
+    },
+    {
+     "voxels": 1267,
+     "diameter_mm": 10.095031301850783,
+     "detected": true,
+     "overlap_fraction": 0.07655880031570639,
+     "dice": 0.14222873900293256
+    },
+    {
+     "voxels": 5872,
+     "diameter_mm": 16.831034643875334,
+     "detected": true,
+     "overlap_fraction": 0.6028610354223434,
+     "dice": 0.7319342499741549
+    },
+    {
+     "voxels": 49826,
+     "diameter_mm": 34.32949958507817,
+     "detected": true,
+     "overlap_fraction": 0.2412595833500582,
+     "dice": 0.3320351342393106
+    },
+    {
+     "voxels": 647,
+     "diameter_mm": 8.068947538343556,
+     "detected": true,
+     "overlap_fraction": 0.24574961360123648,
+     "dice": 0.3930778739184178
+    },
+    {
+     "voxels": 218,
+     "diameter_mm": 5.614800063444079,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 29602,
+     "diameter_mm": 28.85952307034641,
+     "detected": true,
+     "overlap_fraction": 0.2633943652455915,
+     "dice": 0.41261609292726165
+    },
+    {
+     "voxels": 743,
+     "diameter_mm": 8.44977353670801,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 24822,
+     "diameter_mm": 27.214125842605647,
+     "detected": true,
+     "overlap_fraction": 0.22604947224236566,
+     "dice": 0.3046558979231709
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 0.9329294403595642,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 51,
+     "diameter_mm": 3.4597033092542535,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1237,
+     "diameter_mm": 10.014717387973374,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 2005,
+     "diameter_mm": 11.763961393786715,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1747,
+     "diameter_mm": 11.236035429228991,
+     "detected": true,
+     "overlap_fraction": 0.13795077275329135,
+     "dice": 0.24245472837022133
+    },
+    {
+     "voxels": 2089,
+     "diameter_mm": 11.926003842546477,
+     "detected": true,
+     "overlap_fraction": 0.26232647199617043,
+     "dice": 0.4156238149412211
+    },
+    {
+     "voxels": 388,
+     "diameter_mm": 6.804444980650126,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 2858,
+     "diameter_mm": 13.239437683131676,
+     "detected": true,
+     "overlap_fraction": 0.513296011196641,
+     "dice": 0.6765044961955269
+    },
+    {
+     "voxels": 2184,
+     "diameter_mm": 12.104114119268853,
+     "detected": true,
+     "overlap_fraction": 0.5622710622710623,
+     "dice": 0.6941775014132278
+    },
+    {
+     "voxels": 602,
+     "diameter_mm": 7.8773648718481075,
+     "detected": true,
+     "overlap_fraction": 0.5398671096345515,
+     "dice": 0.6680369989722508
+    },
+    {
+     "voxels": 21940,
+     "diameter_mm": 26.1172636184023,
+     "detected": true,
+     "overlap_fraction": 0.5641750227894257,
+     "dice": 0.714211528474987
+    },
+    {
+     "voxels": 564,
+     "diameter_mm": 7.708002253267181,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 258,
+     "diameter_mm": 5.939119087970565,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 572,
+     "diameter_mm": 7.7442757393225445,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 255,
+     "diameter_mm": 5.916009441462543,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 815,
+     "diameter_mm": 8.714343359564078,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 129,
+     "diameter_mm": 4.713881944004444,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 768,
+     "diameter_mm": 8.543500941415218,
+     "detected": true,
+     "overlap_fraction": 0.46875,
+     "dice": 0.6338028169014085
+    },
+    {
+     "voxels": 266,
+     "diameter_mm": 5.99988155765078,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1722,
+     "diameter_mm": 11.182180905043294,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 753,
+     "diameter_mm": 8.487513088552081,
+     "detected": true,
+     "overlap_fraction": 0.0013280212483399733,
+     "dice": 0.002652519893899204
+    },
+    {
+     "voxels": 405,
+     "diameter_mm": 6.902405550939375,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 74,
+     "diameter_mm": 3.9167516782926346,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 16070,
+     "diameter_mm": 23.54258193328971,
+     "detected": true,
+     "overlap_fraction": 0.2989421281891724,
+     "dice": 0.31579293344289233
+    },
+    {
+     "voxels": 369,
+     "diameter_mm": 6.691511885053538,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 345,
+     "diameter_mm": 6.54317440928688,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 2313,
+     "diameter_mm": 12.337883805426896,
+     "detected": true,
+     "overlap_fraction": 0.6286208387375702,
+     "dice": 0.7600627286983795
+    },
+    {
+     "voxels": 33,
+     "diameter_mm": 2.992403207417096,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 111,
+     "diameter_mm": 4.483561430686245,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 2641,
+     "diameter_mm": 12.895502362193787,
+     "detected": true,
+     "overlap_fraction": 0.6751230594471791,
+     "dice": 0.7974060822898033
+    },
+    {
+     "voxels": 1544,
+     "diameter_mm": 10.782792062734439,
+     "detected": true,
+     "overlap_fraction": 0.3905440414507772,
+     "dice": 0.5593692022263451
+    },
+    {
+     "voxels": 386,
+     "diameter_mm": 6.792733348239239,
+     "detected": true,
+     "overlap_fraction": 0.0025906735751295338,
+     "dice": 0.00516795865633075
+    },
+    {
+     "voxels": 288,
+     "diameter_mm": 6.160930280838518,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 374,
+     "diameter_mm": 6.721600022985439,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    }
+   ]
+  },
+  "lits_109": {
+   "lesions": 28,
+   "detected": 18,
+   "small_lesions": 19,
+   "small_detected": 11,
+   "false_positives": 2,
+   "dice": 0.6060010964643118,
+   "per_lesion": [
+    {
+     "voxels": 1053,
+     "diameter_mm": 9.784146430224437,
+     "detected": true,
+     "overlap_fraction": 0.4843304843304843,
+     "dice": 0.5613648871766649
+    },
+    {
+     "voxels": 8546,
+     "diameter_mm": 19.662305949245603,
+     "detected": true,
+     "overlap_fraction": 0.7301661596068336,
+     "dice": 0.6398359395026916
+    },
+    {
+     "voxels": 310,
+     "diameter_mm": 6.508796868727527,
+     "detected": true,
+     "overlap_fraction": 0.9580645161290322,
+     "dice": 0.6629464285714286
+    },
+    {
+     "voxels": 247,
+     "diameter_mm": 6.034099553746217,
+     "detected": true,
+     "overlap_fraction": 0.8178137651821862,
+     "dice": 0.8096192384769539
+    },
+    {
+     "voxels": 134,
+     "diameter_mm": 4.921321673100597,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 454,
+     "diameter_mm": 7.391491882984852,
+     "detected": true,
+     "overlap_fraction": 0.8281938325991189,
+     "dice": 0.5050369375419744
+    },
+    {
+     "voxels": 3253,
+     "diameter_mm": 14.249780494202522,
+     "detected": true,
+     "overlap_fraction": 0.8035659391331079,
+     "dice": 0.7706367924528302
+    },
+    {
+     "voxels": 4044,
+     "diameter_mm": 15.322061540550164,
+     "detected": true,
+     "overlap_fraction": 0.9797230464886251,
+     "dice": 0.8619601870988796
+    },
+    {
+     "voxels": 476,
+     "diameter_mm": 7.509006338715125,
+     "detected": true,
+     "overlap_fraction": 0.7710084033613446,
+     "dice": 0.686623012160898
+    },
+    {
+     "voxels": 16539,
+     "diameter_mm": 24.50284817762507,
+     "detected": true,
+     "overlap_fraction": 0.8741157264647198,
+     "dice": 0.759037093429239
+    },
+    {
+     "voxels": 11548,
+     "diameter_mm": 21.737807829159582,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 646,
+     "diameter_mm": 8.313635751849615,
+     "detected": true,
+     "overlap_fraction": 0.8436532507739938,
+     "dice": 0.7548476454293629
+    },
+    {
+     "voxels": 157,
+     "diameter_mm": 5.188160117213457,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 260,
+     "diameter_mm": 6.138156201792597,
+     "detected": true,
+     "overlap_fraction": 0.8269230769230769,
+     "dice": 0.7678571428571429
+    },
+    {
+     "voxels": 339,
+     "diameter_mm": 6.705740135947613,
+     "detected": true,
+     "overlap_fraction": 0.8289085545722714,
+     "dice": 0.6542491268917345
+    },
+    {
+     "voxels": 705,
+     "diameter_mm": 8.559397436925137,
+     "detected": true,
+     "overlap_fraction": 0.8893617021276595,
+     "dice": 0.7876884422110553
+    },
+    {
+     "voxels": 30,
+     "diameter_mm": 2.9882750694330347,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1325,
+     "diameter_mm": 10.562955401224812,
+     "detected": true,
+     "overlap_fraction": 0.01509433962264151,
+     "dice": 0.02973977695167286
+    },
+    {
+     "voxels": 492,
+     "diameter_mm": 7.5922153985656715,
+     "detected": true,
+     "overlap_fraction": 0.9390243902439024,
+     "dice": 0.7804054054054054
+    },
+    {
+     "voxels": 380,
+     "diameter_mm": 6.965859098881869,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 6466,
+     "diameter_mm": 17.916728806756787,
+     "detected": true,
+     "overlap_fraction": 0.7247138880296938,
+     "dice": 0.8349220489977728
+    },
+    {
+     "voxels": 296,
+     "diameter_mm": 6.409301824703202,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 13242,
+     "diameter_mm": 22.75261655866015,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 251,
+     "diameter_mm": 6.066498024687816,
+     "detected": true,
+     "overlap_fraction": 0.896414342629482,
+     "dice": 0.7009345794392523
+    },
+    {
+     "voxels": 32,
+     "diameter_mm": 3.053257829724046,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 311,
+     "diameter_mm": 6.515788063004938,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 113,
+     "diameter_mm": 4.649500526124836,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1173,
+     "diameter_mm": 10.14252664751297,
+     "detected": true,
+     "overlap_fraction": 0.8047740835464621,
+     "dice": 0.8346595932802829
+    }
+   ]
+  },
+  "lits_110": {
+   "lesions": 17,
+   "detected": 14,
+   "small_lesions": 8,
+   "small_detected": 5,
+   "false_positives": 3,
+   "dice": 0.6453049745296542,
+   "per_lesion": [
+    {
+     "voxels": 142,
+     "diameter_mm": 4.8270475945521225,
+     "detected": true,
+     "overlap_fraction": 0.6267605633802817,
+     "dice": 0.6617100371747212
+    },
+    {
+     "voxels": 12259,
+     "diameter_mm": 21.33391110837283,
+     "detected": true,
+     "overlap_fraction": 0.669875193735215,
+     "dice": 0.7796819368620935
+    },
+    {
+     "voxels": 16568,
+     "diameter_mm": 23.587151406733057,
+     "detected": true,
+     "overlap_fraction": 0.7707629164654756,
+     "dice": 0.8009533665757205
+    },
+    {
+     "voxels": 214,
+     "diameter_mm": 5.534223879587627,
+     "detected": true,
+     "overlap_fraction": 0.11214953271028037,
+     "dice": 0.200836820083682
+    },
+    {
+     "voxels": 163,
+     "diameter_mm": 5.054148533183097,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 3303,
+     "diameter_mm": 13.779125554130534,
+     "detected": true,
+     "overlap_fraction": 0.9567060248259158,
+     "dice": 0.8288524590163935
+    },
+    {
+     "voxels": 33961,
+     "diameter_mm": 29.96256271769217,
+     "detected": true,
+     "overlap_fraction": 0.6250110420776773,
+     "dice": 0.7602980156171646
+    },
+    {
+     "voxels": 4508,
+     "diameter_mm": 15.284342767413188,
+     "detected": true,
+     "overlap_fraction": 0.7597604259094942,
+     "dice": 0.8541147132169576
+    },
+    {
+     "voxels": 12042,
+     "diameter_mm": 21.207281793051624,
+     "detected": true,
+     "overlap_fraction": 0.6980568011958147,
+     "dice": 0.7620342670655426
+    },
+    {
+     "voxels": 1197,
+     "diameter_mm": 9.823890573817623,
+     "detected": true,
+     "overlap_fraction": 0.8805346700083542,
+     "dice": 0.7040748162992652
+    },
+    {
+     "voxels": 3086,
+     "diameter_mm": 13.470512112871258,
+     "detected": true,
+     "overlap_fraction": 0.6817887232663642,
+     "dice": 0.7460992907801418
+    },
+    {
+     "voxels": 30648,
+     "diameter_mm": 28.954729531079575,
+     "detected": true,
+     "overlap_fraction": 0.04652832158705299,
+     "dice": 0.08891937394774584
+    },
+    {
+     "voxels": 82,
+     "diameter_mm": 4.019667066487665,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 198,
+     "diameter_mm": 5.392711615460421,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 5508,
+     "diameter_mm": 16.339926927941377,
+     "detected": true,
+     "overlap_fraction": 0.4929193899782135,
+     "dice": 0.648668020547127
+    },
+    {
+     "voxels": 241,
+     "diameter_mm": 5.757816417570681,
+     "detected": true,
+     "overlap_fraction": 0.7012448132780082,
+     "dice": 0.7191489361702128
+    },
+    {
+     "voxels": 286,
+     "diameter_mm": 6.0959417797415965,
+     "detected": true,
+     "overlap_fraction": 0.9405594405594405,
+     "dice": 0.7819767441860465
+    }
+   ]
+  },
+  "lits_113": {
+   "lesions": 29,
+   "detected": 8,
+   "small_lesions": 23,
+   "small_detected": 2,
+   "false_positives": 3,
+   "dice": 0.6637756288837936,
+   "per_lesion": [
+    {
+     "voxels": 4,
+     "diameter_mm": 1.550545387689539,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 0.9767823863837285,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 0.9767823863837285,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 10,
+     "diameter_mm": 2.1044138578372316,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 21,
+     "diameter_mm": 2.6948685408573136,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 4,
+     "diameter_mm": 1.550545387689539,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 16217,
+     "diameter_mm": 24.724147466000705,
+     "detected": true,
+     "overlap_fraction": 0.9337732009619535,
+     "dice": 0.7996514759465596
+    },
+    {
+     "voxels": 48,
+     "diameter_mm": 3.5498627780271854,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 7967,
+     "diameter_mm": 19.508749192589804,
+     "detected": true,
+     "overlap_fraction": 0.9182879377431906,
+     "dice": 0.8443649373881932
+    },
+    {
+     "voxels": 4,
+     "diameter_mm": 1.550545387689539,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 5,
+     "diameter_mm": 1.6702743858536393,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 2,
+     "diameter_mm": 1.230668689771407,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 25,
+     "diameter_mm": 2.8561290241599155,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 0.9767823863837285,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 0.9767823863837285,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 39,
+     "diameter_mm": 3.312475606039185,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 0.9767823863837285,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 2,
+     "diameter_mm": 1.230668689771407,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 3,
+     "diameter_mm": 1.4087639770457774,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 59,
+     "diameter_mm": 3.802610329279985,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 6,
+     "diameter_mm": 1.7749313890135927,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 19030,
+     "diameter_mm": 26.078188234887676,
+     "detected": true,
+     "overlap_fraction": 0.5936416184971098,
+     "dice": 0.5400870105655686
+    },
+    {
+     "voxels": 30656,
+     "diameter_mm": 30.5705309866052,
+     "detected": true,
+     "overlap_fraction": 0.5998499478079332,
+     "dice": 0.6783105864994466
+    },
+    {
+     "voxels": 690,
+     "diameter_mm": 8.631392181298668,
+     "detected": true,
+     "overlap_fraction": 0.9014492753623189,
+     "dice": 0.4817970565453137
+    },
+    {
+     "voxels": 5693,
+     "diameter_mm": 17.441274379166725,
+     "detected": true,
+     "overlap_fraction": 0.9381696820656947,
+     "dice": 0.7053618594823032
+    },
+    {
+     "voxels": 402,
+     "diameter_mm": 7.208969211469569,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1855,
+     "diameter_mm": 12.001783575573663,
+     "detected": true,
+     "overlap_fraction": 0.7067385444743935,
+     "dice": 0.7682390858482274
+    },
+    {
+     "voxels": 858,
+     "diameter_mm": 9.281686929958337,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 665,
+     "diameter_mm": 8.525863359750105,
+     "detected": true,
+     "overlap_fraction": 0.7609022556390977,
+     "dice": 0.7223411848679515
+    }
+   ]
+  },
+  "lits_122": {
+   "lesions": 17,
+   "detected": 5,
+   "small_lesions": 11,
+   "small_detected": 0,
+   "false_positives": 0,
+   "dice": 0.3421856015356184,
+   "per_lesion": [
+    {
+     "voxels": 3627,
+     "diameter_mm": 17.03007499196033,
+     "detected": true,
+     "overlap_fraction": 0.6782464846980976,
+     "dice": 0.7922705314009661
+    },
+    {
+     "voxels": 63019,
+     "diameter_mm": 44.10872906409987,
+     "detected": true,
+     "overlap_fraction": 0.1441152668242911,
+     "dice": 0.25117539686929585
+    },
+    {
+     "voxels": 2792,
+     "diameter_mm": 15.607709741733478,
+     "detected": true,
+     "overlap_fraction": 0.6952005730659025,
+     "dice": 0.7176927343316695
+    },
+    {
+     "voxels": 1457,
+     "diameter_mm": 12.565715590772099,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 3114,
+     "diameter_mm": 16.18602640719896,
+     "detected": true,
+     "overlap_fraction": 0.3265895953757225,
+     "dice": 0.4713789107763615
+    },
+    {
+     "voxels": 245,
+     "diameter_mm": 6.935685684674789,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 3445,
+     "diameter_mm": 16.740321096022466,
+     "detected": true,
+     "overlap_fraction": 0.6551523947750363,
+     "dice": 0.7452534257883441
+    },
+    {
+     "voxels": 345,
+     "diameter_mm": 7.77392608260867,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 385,
+     "diameter_mm": 8.063451009674232,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 673,
+     "diameter_mm": 9.713425120306246,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 50,
+     "diameter_mm": 4.083419922334693,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 1.1084106973139898,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 4,
+     "diameter_mm": 1.759492306929033,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 28,
+     "diameter_mm": 3.365787699772674,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 9,
+     "diameter_mm": 2.3055871607805107,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1,
+     "diameter_mm": 1.1084106973139898,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 608,
+     "diameter_mm": 9.390064345446019,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    }
+   ]
+  },
+  "lits_124": {
+   "lesions": 14,
+   "detected": 6,
+   "small_lesions": 10,
+   "small_detected": 2,
+   "false_positives": 0,
+   "dice": 0.8598161093170765,
+   "per_lesion": [
+    {
+     "voxels": 1586,
+     "diameter_mm": 13.047900924510705,
+     "detected": true,
+     "overlap_fraction": 0.6311475409836066,
+     "dice": 0.7285298398835517
+    },
+    {
+     "voxels": 214,
+     "diameter_mm": 6.692332555731227,
+     "detected": true,
+     "overlap_fraction": 0.48130841121495327,
+     "dice": 0.5659340659340659
+    },
+    {
+     "voxels": 376,
+     "diameter_mm": 8.075489764336632,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 1202,
+     "diameter_mm": 11.896185982846864,
+     "detected": true,
+     "overlap_fraction": 0.5757071547420965,
+     "dice": 0.6933867735470942
+    },
+    {
+     "voxels": 38252,
+     "diameter_mm": 37.69852038341649,
+     "detected": true,
+     "overlap_fraction": 0.837943114085538,
+     "dice": 0.8999227907629677
+    },
+    {
+     "voxels": 228,
+     "diameter_mm": 6.83519965927157,
+     "detected": true,
+     "overlap_fraction": 0.07894736842105263,
+     "dice": 0.14634146341463414
+    },
+    {
+     "voxels": 199,
+     "diameter_mm": 6.532167033233695,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 72,
+     "diameter_mm": 4.654614893874934,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 376,
+     "diameter_mm": 8.075489764336632,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 99,
+     "diameter_mm": 5.175885426622631,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 106,
+     "diameter_mm": 5.295108674214647,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 29094,
+     "diameter_mm": 34.411800849904836,
+     "detected": true,
+     "overlap_fraction": 0.7532137210421392,
+     "dice": 0.8486726177797572
+    },
+    {
+     "voxels": 175,
+     "diameter_mm": 6.258240838325258,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    },
+    {
+     "voxels": 113,
+     "diameter_mm": 5.409192084669955,
+     "detected": false,
+     "overlap_fraction": 0.0,
+     "dice": 0.0
+    }
+   ]
+  }
+ }
+}
