@@ -477,3 +477,15 @@ Reading:
   control and both refiners keep texture.
 - Deck docs/report/LDCT_Refiner_Results.pptx: 4 figure slides added (37 slides); "58 small"
   typo fixed to 57. **Step 7 done.**
+
+## New model: edge-preserving fine-tune (23 Nov, owner's request)
+- Owner asked for a model with better Dice AND better PSNR than the baselines. From the
+  findings, the lever is the objective, not extra network: `ct_mamba_edge` = the control's exact
+  setup + 1.0 x lesion-weighted L1 on image gradients (penalises smoothing). Criteria fixed
+  BEFORE training: docs/success_criteria_edge.md.
+- New held-out test set `lits_fresh` (configs/lits_fresh_split.json): 10 unused LiTS part-2
+  patients, 240 tumours / 137 < 10 mm by the scan, 1839 slices. The 20-patient set shaped the
+  design, so it is secondary for this model.
+- Home is 40.9 GB (9.1 GB free, below the 10 GB rule before this run). The job keeps the run on
+  node scratch (runs/ct_mamba_edge is a symlink for the job's lifetime) and only small files +
+  an fp16 best.pth (~150 MB) reach home. Loss unit check and tests/check_refiner.py pass.

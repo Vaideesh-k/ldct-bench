@@ -58,6 +58,21 @@ def l1_lesion(pred, target, mask=None, weight=5.0):
     return loss
 
 
+def gradient_lesion(pred, target, mask=None, weight=5.0):
+    """Edge-preserving term (added 23 Nov): lesion-weighted L1 between the horizontal and vertical
+    finite differences of prediction and target. Pixel L1 is satisfied by a smooth image; this
+    term is not, so it penalises blurred tumour edges and flattened liver texture."""
+    loss = 0.0
+    for dim in (-1, -2):
+        dp, dt = torch.diff(pred, dim=dim), torch.diff(target, dim=dim)
+        m = None
+        if mask is not None:
+            mk = mask.to(pred.dtype)
+            m = torch.maximum(mk.narrow(dim, 0, mk.shape[dim] - 1), mk.narrow(dim, 1, mk.shape[dim] - 1))
+        loss = loss + l1_lesion(dp, dt, m, weight)
+    return loss / 2
+
+
 def lits_train_patients(split_file, prefix="lits_"):
     split = json.load(open(split_file))
     train, test = set(split["train"]), set(split["test"])

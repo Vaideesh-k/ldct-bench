@@ -26,9 +26,9 @@ from torch.utils.data import DataLoader
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ldct.config import resolve   # noqa: E402
 from ldct.models import build_model   # noqa: E402
-from ldct.tumour_train import FromIndex, MixedPatches, l1_lesion, lits_train_patients   # noqa: E402
+from ldct.tumour_train import FromIndex, MixedPatches, gradient_lesion, l1_lesion, lits_train_patients   # noqa: E402
 
-LOG = ["iteration", "window_loss", "loss_mayo", "loss_lits", "lits_patches_with_tumour", "lr", "seconds"]
+LOG = ["iteration", "window_loss", "loss_mayo", "loss_lits", "lits_patches_with_tumour", "lr", "seconds", "edge_term"]
 
 
 def load_cfg(path):
@@ -59,7 +59,7 @@ def save(obj, path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", required=True, choices=["refiner", "refiner25d", "control"])
+    ap.add_argument("--mode", required=True, choices=["refiner", "refiner25d", "control", "edge"])
     ap.add_argument("--config", default="configs/tumour_train.yaml")
     ap.add_argument("--run")
     ap.add_argument("--iterations", type=int)
@@ -105,6 +105,15 @@ def main():
         start, best_loss = ck["iteration"], ck["best_loss"]
         print(f"resuming after iteration {start} (best window loss {best_loss:.6f})", flush=True)
 
+    edge_w = float(m.get("edge_weight", 0.0))
+
+    def objective(pred, y, mask):   # control/refiner: L1 + lesion L1; edge: + edge_w * gradient term
+        loss = l1_lesion(pred, y, mask, cfg["lesion_weight"])
+        if not edge_w:
+            return loss, 0.0
+        g = gradient_lesion(pred, y, mask, cfg["lesion_weight"])
+        return loss + edge_w * g, float(g.detach())
+
     accum = int(m.get("accum", 1))
     while True:   # find a micro-batch that fits: the step is always m["batch"] patches
         try:
@@ -115,7 +124,7 @@ def main():
             probe = next(iter(loader))
             model.train()
             out = model(probe[0].to(device))
-            l1_lesion(out, probe[1].to(device), probe[2].to(device), cfg["lesion_weight"]).backward()
+            objective(out, probe[1].to(device), probe[2].to(device))[0].backward()
             opt.zero_grad(set_to_none=True)
             del out, probe
             break
@@ -129,12 +138,13 @@ def main():
     print(f"micro-batch {micro} x accumulation {accum} = {m['batch']} patches per optimizer step", flush=True)
     model.train()
     it, t0 = start, time.time()
-    acc = {"loss": 0.0, "mayo": 0.0, "lits": 0.0, "n_mayo": 0, "n_lits": 0, "tum": 0.0, "lits_px": 0.0, "n": 0}
+    acc = {"loss": 0.0, "mayo": 0.0, "lits": 0.0, "n_mayo": 0, "n_lits": 0, "tum": 0.0, "lits_px": 0.0, "n": 0, "edge": 0.0}
     step_loss, k = 0.0, 0
     for x, y, mask, src in loader:
         x, y, mask = x.to(device, non_blocking=True), y.to(device, non_blocking=True), mask.to(device, non_blocking=True)
         pred = model(x)
-        loss = l1_lesion(pred, y, mask, cfg["lesion_weight"])
+        loss, edge = objective(pred, y, mask)
+        acc["edge"] += edge / accum
         if not torch.isfinite(loss):
             raise SystemExit(f"loss {loss.item()} at iteration {it + 1}; latest.pth holds the last window")
         (loss / accum).backward()
@@ -160,7 +170,8 @@ def main():
                    "loss_mayo": round(acc["mayo"] / max(acc["n_mayo"], 1), 7),
                    "loss_lits": round(acc["lits"] / max(acc["n_lits"], 1), 7),
                    "lits_patches_with_tumour": round(acc["tum"] / max(acc["n_lits"], 1), 4),   # LiTS patches with tumour
-                   "lr": f"{sched.get_last_lr()[0]:.3g}", "seconds": round(time.time() - t0, 1)}
+                   "lr": f"{sched.get_last_lr()[0]:.3g}", "seconds": round(time.time() - t0, 1),
+                   "edge_term": round(acc["edge"] / acc["n"], 7)}
             new = not os.path.exists(log)
             with open(log, "a", newline="") as f:
                 w = csv.DictWriter(f, fieldnames=LOG)
@@ -177,7 +188,7 @@ def main():
                   f"LiTS patches with tumour {row['lits_patches_with_tumour']:.2f}) lr {row['lr']} | "
                   f"{row['seconds']:.0f}s | best {best_loss:.6f}", flush=True)
             acc = dict.fromkeys(acc, 0)
-            acc.update({"loss": 0.0, "mayo": 0.0, "lits": 0.0, "tum": 0.0})
+            acc.update({"loss": 0.0, "mayo": 0.0, "lits": 0.0, "tum": 0.0, "edge": 0.0})
             t0 = time.time()
     print(f"Done. best.pth = window loss {best_loss:.6f}", flush=True)
 

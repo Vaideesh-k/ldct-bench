@@ -1,0 +1,21 @@
+{
+ "source": "LiTS part 2 volumes + masks (as lits_ext_split.json)",
+ "rule": "Fixed 23 Nov BEFORE the edge model was trained. Candidates = LiTS patients 51-130 not in configs/lits_ext_split.json and never used to train or tune anything, with >= 1 tumour, <= 250 liver slices (time) and a real voxel spacing in the scan (identity-header masks excluded from selection). Order: most tumours under 10 mm first, then most tumours, then patient number; add patients until >= 100 tumours AND >= 10 patients. Counts are from the scan (mask header spacing); the conversion recomputes them.",
+ "why": "The 20-patient set (lits + lits_ext) was seen when the edge model was designed, so it no longer gives an unbiased verdict for it.",
+ "train": [],
+ "scan_tumours": 240,
+ "scan_small_tumours": 137,
+ "scan_slices": 1839,
+ "test": [
+  78,
+  93,
+  97,
+  99,
+  108,
+  109,
+  110,
+  113,
+  122,
+  124
+ ]
+}

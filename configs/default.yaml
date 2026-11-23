@@ -37,6 +37,12 @@ data:
         split: configs/lits_ext_split.json
         part: test
         prefix: lits_
+    lits_fresh:             # 23 Nov: 10 MORE unused LiTS part-2 patients, the held-out test of the edge model
+      root: data/lits_fresh
+      patients:
+        split: configs/lits_fresh_split.json
+        part: test
+        prefix: lits_
 
 train:
   epochs: 250               # number of full passes over the training data

@@ -21,3 +21,6 @@ modes:
   # 2.5D variant (added 20 Nov, before any refiner result): + the noisy slices above and below
   refiner25d: {model: ct_mamba_refiner, model_args: {in_channels: 4}, context: 1, patch: 128, batch: 16, stage_a: true}
   control: {model: ct_mamba, patch: 64, batch: 64, accum: 2, stage_a: false, init: runs/ct_mamba/best_from11.pth}   # 2 x 32 patches: 64 do not fit in 20 GB
+  # edge-preserving fine-tune (added 23 Nov, after the 20-patient verdict; judged on a NEW test set):
+  # the control's exact setup + edge_weight x lesion-weighted L1 on image gradients (ldct/tumour_train.py)
+  edge: {model: ct_mamba, patch: 64, batch: 64, accum: 2, stage_a: false, init: runs/ct_mamba/best_from11.pth, edge_weight: 1.0}

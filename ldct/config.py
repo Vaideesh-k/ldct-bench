@@ -42,9 +42,10 @@ def load_config(model_name, extra=None):
 
     cfg["model_name"] = model_name
     # node-local scratch inside a job (slurm/ext_pipeline.sbatch): the extended LiTS set lives there
-    ext_root = os.environ.get("LDCT_LITS_EXT_ROOT")
-    if ext_root and "lits_ext" in cfg.get("data", {}).get("test_sets", {}):
-        cfg["data"]["test_sets"]["lits_ext"]["root"] = ext_root
+    for name, var in (("lits_ext", "LDCT_LITS_EXT_ROOT"), ("lits_fresh", "LDCT_LITS_FRESH_ROOT")):
+        root = os.environ.get(var)
+        if root and name in cfg.get("data", {}).get("test_sets", {}):
+            cfg["data"]["test_sets"][name]["root"] = root
     check_locked_patient(cfg)
     return cfg
 
