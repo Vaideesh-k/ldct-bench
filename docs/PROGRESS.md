@@ -489,3 +489,26 @@ Reading:
 - Home is 40.9 GB (9.1 GB free, below the 10 GB rule before this run). The job keeps the run on
   node scratch (runs/ct_mamba_edge is a symlink for the job's lifetime) and only small files +
   an fp16 best.pth (~150 MB) reach home. Loss unit check and tests/check_refiner.py pass.
+- Job 42871: fresh set converted (10 patients, 1839 slices, 240 tumours / 137 < 10 mm, all masks
+  aligned), all existing inputs scored, edge model trained 30,000 iterations (best = 28,000,
+  2.6 s/it on a 2g slice), scored on L506 + lits_fresh. Verdict: dgx_results/final_fresh_edge.md.
+
+| input | L506 PSNR | fresh PSNR | detected | < 10 mm | FP/pt | per-tumour Dice |
+|---|---|---|---|---|---|---|
+| normal dose | - | - | 132/240 | 39/137 | 0.80 | 0.349 |
+| CT-Mamba | 29.42 | 29.96 | 116/240 | 36/137 | 0.80 | 0.260 |
+| CTformer | 28.56 | 28.77 | 125/240 | 38/137 | 1.00 | 0.323 |
+| CoreDiff | 29.28 | 29.60 | 122/240 | 40/137 | 0.90 | 0.297 |
+| control | 29.41 | 31.22 | 132/240 | 43/137 | 1.10 | 0.334 |
+| 2.5D refiner | 29.64 | 31.62 | 122/240 | 36/137 | 1.00 | 0.321 |
+| edge model | 29.41 | 31.23 | 132/240 | 43/137 | 1.10 | 0.333 |
+
+  Criteria: (a) FAIL 29.415 < 29.42 (by 0.005 dB), (b) PASS, (c) PASS (+0.011 vs CTformer,
+  p 0.028, CI excludes 0), (d) FAIL (edge - control -0.0002, p 0.41). **NOT A WIN.**
+- Reading: the edge term had no measurable effect (edge vs control per-slice PSNR +0.01 dB, Dice
+  -0.0002). Its value only fell 0.00421 -> 0.00414 over training: the normal-dose targets are
+  themselves noisy, so most of their gradient is noise the model cannot (and should not) learn.
+- On this held-out set the existing control already does what was asked except on Mayo: LiTS
+  PSNR 31.22 vs best baseline 29.96, and per-tumour Dice significantly above the best baseline
+  (control - CTformer +0.011 [+0.0001, +0.023], p 0.042), Mayo L506 PSNR 29.41 vs 29.42 (equal).
+  Not significantly different from normal-dose Dice (-0.015, CI includes 0).

@@ -1,0 +1,368 @@
+{
+ "image": {
+  "quarter_dose": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 24.468780777432432,
+    "ci_low": 24.29031807022412,
+    "ci_high": 24.642407261655876
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 23.983350197556423,
+    "ci_low": 23.864642790027602,
+    "ci_high": 24.105768418090108
+   }
+  },
+  "ct_mamba": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 29.418675074577344,
+    "ci_low": 29.2620778841284,
+    "ci_high": 29.57430569305339
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 29.955379460861312,
+    "ci_low": 29.842119229195376,
+    "ci_high": 30.06908853826219
+   }
+  },
+  "ctformer": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 28.56145131053099,
+    "ci_low": 28.40249857145782,
+    "ci_high": 28.712536256594362
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 28.768217049216148,
+    "ci_low": 28.67440635276241,
+    "ci_high": 28.861720271655223
+   }
+  },
+  "corediff": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 29.278863569287637,
+    "ci_low": 29.125021085019235,
+    "ci_high": 29.43193967384842
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 29.604097903883833,
+    "ci_low": 29.509605770569735,
+    "ci_high": 29.700005339058993
+   }
+  },
+  "ct_mamba_control": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 29.414374039494543,
+    "ci_low": 29.26043933303881,
+    "ci_high": 29.568453877153857
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 31.218703049373705,
+    "ci_low": 31.106054200431767,
+    "ci_high": 31.32922324774065
+   }
+  },
+  "ct_mamba_refiner": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 29.417596772523723,
+    "ci_low": 29.260795719634725,
+    "ci_high": 29.572546622059896
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 31.002645964052366,
+    "ci_low": 30.891487879271892,
+    "ci_high": 31.110932211382444
+   }
+  },
+  "ct_mamba_refiner25d": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 29.637244274164342,
+    "ci_low": 29.478705001322776,
+    "ci_high": 29.794273933413393
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 31.619002333724058,
+    "ci_low": 31.511924757762774,
+    "ci_high": 31.727643332330302
+   }
+  },
+  "ct_mamba_edge": {
+   "mayo_L506": {
+    "slices": 526,
+    "psnr": 29.414743130888823,
+    "ci_low": 29.26158814369225,
+    "ci_high": 29.566222272091828
+   },
+   "lits_fresh": {
+    "slices": 1839,
+    "psnr": 31.22818554748807,
+    "ci_low": 31.11902036466786,
+    "ci_high": 31.33702998188151
+   }
+  }
+ },
+ "detection": {
+  "full": {
+   "tumours": 240,
+   "detected": 132,
+   "small": 137,
+   "small_detected": 39,
+   "dice": 0.34860814115388716,
+   "dice_ci": [
+    0.302314230184238,
+    0.3938451547386301
+   ],
+   "dice_small": 0.16749722365314665,
+   "fp_per_patient": 0.8,
+   "fp_ci": [
+    0.1,
+    1.6
+   ],
+   "per_patient_dice": 0.6699894137425816
+  },
+  "quarter": {
+   "tumours": 240,
+   "detected": 124,
+   "small": 137,
+   "small_detected": 34,
+   "dice": 0.32959446197518566,
+   "dice_ci": [
+    0.28354374447460945,
+    0.37454959097544144
+   ],
+   "dice_small": 0.13976787926344098,
+   "fp_per_patient": 1.0,
+   "fp_ci": [
+    0.3,
+    1.8
+   ],
+   "per_patient_dice": 0.6337239544409846
+  },
+  "ct_mamba": {
+   "tumours": 240,
+   "detected": 116,
+   "small": 137,
+   "small_detected": 36,
+   "dice": 0.2599359894231783,
+   "dice_ci": [
+    0.21972901170169545,
+    0.3006679051832789
+   ],
+   "dice_small": 0.13782245551675482,
+   "fp_per_patient": 0.8,
+   "fp_ci": [
+    0.3,
+    1.4
+   ],
+   "per_patient_dice": 0.5179912165406734
+  },
+  "ctformer": {
+   "tumours": 240,
+   "detected": 125,
+   "small": 137,
+   "small_detected": 38,
+   "dice": 0.3227475222656685,
+   "dice_ci": [
+    0.27769556696842035,
+    0.36813233699279124
+   ],
+   "dice_small": 0.16138183118797364,
+   "fp_per_patient": 1.0,
+   "fp_ci": [
+    0.4,
+    1.6
+   ],
+   "per_patient_dice": 0.6262167344245836
+  },
+  "corediff": {
+   "tumours": 240,
+   "detected": 122,
+   "small": 137,
+   "small_detected": 40,
+   "dice": 0.29664780902807475,
+   "dice_ci": [
+    0.25345466591356497,
+    0.3390426034020985
+   ],
+   "dice_small": 0.1580937030160182,
+   "fp_per_patient": 0.9,
+   "fp_ci": [
+    0.4,
+    1.5
+   ],
+   "per_patient_dice": 0.5868659393777579
+  },
+  "ct_mamba_control": {
+   "tumours": 240,
+   "detected": 132,
+   "small": 137,
+   "small_detected": 43,
+   "dice": 0.33354772709310204,
+   "dice_ci": [
+    0.2892600277939603,
+    0.37813036093440716
+   ],
+   "dice_small": 0.17410360737152886,
+   "fp_per_patient": 1.1,
+   "fp_ci": [
+    0.5,
+    1.8
+   ],
+   "per_patient_dice": 0.6288708126537097
+  },
+  "ct_mamba_refiner": {
+   "tumours": 240,
+   "detected": 124,
+   "small": 137,
+   "small_detected": 36,
+   "dice": 0.3216664006233229,
+   "dice_ci": [
+    0.2771116258951034,
+    0.3671462987802243
+   ],
+   "dice_small": 0.15781622083554275,
+   "fp_per_patient": 1.0,
+   "fp_ci": [
+    0.4,
+    1.6
+   ],
+   "per_patient_dice": 0.6289085121042346
+  },
+  "ct_mamba_refiner25d": {
+   "tumours": 240,
+   "detected": 122,
+   "small": 137,
+   "small_detected": 36,
+   "dice": 0.32124400059887864,
+   "dice_ci": [
+    0.277896499749414,
+    0.36586293297115724
+   ],
+   "dice_small": 0.1559555374756617,
+   "fp_per_patient": 1.0,
+   "fp_ci": [
+    0.3,
+    1.8
+   ],
+   "per_patient_dice": 0.6239728471856634
+  },
+  "ct_mamba_edge": {
+   "tumours": 240,
+   "detected": 132,
+   "small": 137,
+   "small_detected": 43,
+   "dice": 0.33337151193277825,
+   "dice_ci": [
+    0.2884865286785298,
+    0.37868434033905085
+   ],
+   "dice_small": 0.1737051663953946,
+   "fp_per_patient": 1.1,
+   "fp_ci": [
+    0.4,
+    1.8
+   ],
+   "per_patient_dice": 0.6289308516525495
+  }
+ },
+ "paired": {
+  "ct_mamba_control": {
+   "mean_difference": -0.00017621516032383574,
+   "ci_low": -0.001020041814709042,
+   "ci_high": 0.0006628168811082763,
+   "wilcoxon_p": 0.4149233562498078,
+   "significant": false
+  },
+  "ct_mamba": {
+   "mean_difference": 0.07343552250959992,
+   "ci_low": 0.055857956713851874,
+   "ci_high": 0.09243308872283525,
+   "wilcoxon_p": 5.198885860514101e-18,
+   "significant": true
+  },
+  "ctformer": {
+   "mean_difference": 0.010623989667109675,
+   "ci_low": 0.00020035994955303028,
+   "ci_high": 0.021919534606216873,
+   "wilcoxon_p": 0.027670465725468267,
+   "significant": true
+  },
+  "corediff": {
+   "mean_difference": 0.03672370290470344,
+   "ci_low": 0.021266639293432633,
+   "ci_high": 0.05264997805909384,
+   "wilcoxon_p": 9.126198111663864e-09,
+   "significant": true
+  },
+  "ct_mamba_refiner": {
+   "mean_difference": 0.011705111309455313,
+   "ci_low": 0.0043624741241919,
+   "ci_high": 0.019821022699929598,
+   "wilcoxon_p": 0.009122611587563108,
+   "significant": true
+  },
+  "ct_mamba_refiner25d": {
+   "mean_difference": 0.012127511333899532,
+   "ci_low": 0.0015954938209965326,
+   "ci_high": 0.021619070758348614,
+   "wilcoxon_p": 0.0011811971730709713,
+   "significant": true
+  },
+  "full": {
+   "mean_difference": -0.015236629221108963,
+   "ci_low": -0.031015021220787056,
+   "ci_high": -0.00013841446464865674,
+   "wilcoxon_p": 0.004113179786276884,
+   "significant": true
+  }
+ },
+ "criteria": {
+  "a": {
+   "rule": "L506 PSNR >= 29.42 dB (CT-Mamba)",
+   "value": 29.414743130888823,
+   "pass": false
+  },
+  "b": {
+   "rule": "lits_fresh PSNR > best baseline (CT-Mamba 29.96)",
+   "value": 31.22818554748807,
+   "pass": true
+  },
+  "c": {
+   "rule": "Dice > best baseline (CTformer 0.3227), significant",
+   "value": 0.33337151193277825,
+   "paired": {
+    "mean_difference": 0.010623989667109675,
+    "ci_low": 0.00020035994955303028,
+    "ci_high": 0.021919534606216873,
+    "wilcoxon_p": 0.027670465725468267,
+    "significant": true
+   },
+   "pass": true
+  },
+  "d": {
+   "rule": "Dice > control (0.3335), significant",
+   "value": 0.33337151193277825,
+   "paired": {
+    "mean_difference": -0.00017621516032383574,
+    "ci_low": -0.001020041814709042,
+    "ci_high": 0.0006628168811082763,
+    "wilcoxon_p": 0.4149233562498078,
+    "significant": false
+   },
+   "pass": false
+  }
+ },
+ "verdict": "NOT A WIN"
+}

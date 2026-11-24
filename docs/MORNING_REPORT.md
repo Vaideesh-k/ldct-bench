@@ -38,5 +38,10 @@ Branch **`final-week`** (pushed after every step). Full log: docs/PROGRESS.md.
   in nnU-Net and refiner/control training; not retrained, reported as a limitation.
   All test patients verified aligned.
 
+## Edge model (24 Nov, fresh 10-patient set, 240 tumours)
+NOT A WIN: identical to the control (Dice 0.333 vs 0.334, p 0.41). Both beat the best baseline
+on fresh-set PSNR (31.2 vs 30.0) and Dice (+0.011 vs CTformer, p < 0.05); Mayo PSNR ties
+CT-Mamba (29.41 vs 29.42). dgx_results/final_fresh_edge.md.
+
 ## Next
 - Nothing queued. All brief steps done; write-up of the report text from these tables and figures.
