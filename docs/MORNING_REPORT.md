@@ -45,3 +45,5 @@ CT-Mamba (29.41 vs 29.42). dgx_results/final_fresh_edge.md.
 
 ## Next
 - Nothing queued. All brief steps done; write-up of the report text from these tables and figures.
+
+- Edge model secondary sets (old 20 patients) done: within 0.01 dB PSNR and 0.004 Dice of the control on both halves. Job 42871 finished; no jobs running.

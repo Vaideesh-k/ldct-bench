@@ -512,3 +512,6 @@ Reading:
   PSNR 31.22 vs best baseline 29.96, and per-tumour Dice significantly above the best baseline
   (control - CTformer +0.011 [+0.0001, +0.023], p 0.042), Mayo L506 PSNR 29.41 vs 29.42 (equal).
   Not significantly different from normal-dose Dice (-0.015, CI includes 0).
+
+### Edge model: secondary sets (job 42871 finished 24 Nov 22:00, 1 d 10 h)
+Old 20 patients (lits + lits_ext), edge vs control: PSNR 30.91 vs 30.90 and 31.63 vs 31.62; per-tumour Dice 0.583 vs 0.582 and 0.343 vs 0.339; identical detection counts. Confirms the fresh-set verdict: edge = control. fp16 weights kept on the DGX at results/ct_mamba_edge/best_fp16.pth (not committed). Home 41 GB.
